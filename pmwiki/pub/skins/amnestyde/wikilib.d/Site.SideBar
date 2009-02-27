@@ -1,0 +1,16 @@
+version=pmwiki-2.2.0-beta68 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_5; en-us) AppleWebKit/525.27.1 (KHTML, like Gecko) Version/3.2.1 Safari/525.27.1
+author=Martin Kerz
+charset=UTF-8
+csum=so
+host=84.165.212.23
+name=Site.SideBar
+passwdedit=@_site_edit
+rev=77
+targets=Main.Informieren,Main.Informieren-International,Main.Mitmachen,Main.Spenden,Main.UnsereGruppe,Main.Termine,Main.Petitionen,Intern.Start,Intern.Adressbuch,Site.Konfiguration,PmWikiDe.DocumentationIndex,Site.WikiSandbox
+text=(:if !name Main.Informieren*:)%0a* %25aktiv%25[[Main/Informieren]]%0a(:else:)%0a%25sidehead%25Informieren%25%25%0a>>unterpunkte%3c%3c%0a* [[Main/Informieren|Deutsche Meldungen]]%0a* [[Main/Informieren-International|Internationale Meldungen]]%0a>>%3c%3c%0a(:ifend:)%0a(:if !name Main.Mitmachen*:)%0a* %25aktiv%25[[Main/Mitmachen]]%0a(:else:)%0a%25sidehead%25Mitmachen%25%25%0a(:ifend:)%0a(:if !name Main.Spenden*:)%0a* %25aktiv%25[[Main/Spenden]]%0a(:else:)%0a%25sidehead%25Spenden%25%25%0a(:ifend:)%0a(:if !name Main.UnsereGruppe*:)%0a* [[Main/Unsere Gruppe]]%0a(:else:)%0a%25sidehead%25Unsere Gruppe%25%25%0a(:ifend:)%0a(:if !name Main.Termine*:)%0a* [[Main/Termine]]%0a(:else:)%0a%25sidehead%25Termine%25%25%0a(:ifend:)%0a(:if !name Main.Petitionen*:)%0a* [[Main/Petitionen]]%0a(:else:)%0a%25sidehead%25Petitionen%25%25%0a(:ifend:)%0a(:searchbox label="" value="Suche" group="Main" focus=true:)%0a>>extern%3c%3c%0a* [[http://www.amnesty.de|Hauptseite deutsche Sektion www.amnesty.de]]%0a>>%3c%3c%0a%0a(:if expr auth edit && [ group Intern ||  group Site  || group PmWikiDe ]:)%0a%25sidehead%25Intern%25%25%0a>>unterpunkte%3c%3c%0a* [[Intern/Start|Mitgliederbereich]]%0a* [[Intern/Adressbuch]]%0a* [[Site/Konfiguration]]%0a* [[PmWikiDe/DocumentationIndex|Anleitung]]%0a* [[Site/WikiSandbox|Sandkasten]]%0a* [[http://wiki.amnesty-intern.de|Support der FK Internet]]%0a>>%3c%3c%0a(:messages:)%0a(:fox neuereintrag template=Site.Vorlage redirect=1:)%0a(:input hidden target '{$$(newticket Main)}':)%0a(:input text name "Neuer Eintrag" size=20:)%0a(:input submit post "":)%0a(:foxend neuereintrag:)%0a%0a(:elseif auth edit:)%0a* [[Intern/Start|Intern]]%0a%0a(:messages:)%0a(:fox neuereintrag template=Site.Vorlage redirect=1:)%0a(:input hidden target '{$$(newticket Main)}':)%0a(:input text name "Neuer Eintrag" size=20:)%0a(:input submit post "":)%0a(:foxend neuereintrag:)%0a(:ifend:)%0a
+time=1228754630
+author:1228754630=Martin Kerz
+csum:1228754630=so
+diff:1228754630:1218284355:=48d47%0a%3c * [[http://wiki.amnesty-intern.de|Support der FK Internet]]%0a
+host:1228754630=84.165.212.23
