@@ -379,9 +379,10 @@ div.subbreadcrums a {
 #wikileft .inputbutton {
 	background: url(images/btn_go.gif) no-repeat 0 4px;
 	border: 0 solid white;
-	color: transparent;
 	width: 26px;
 	height: 20px;
+	padding: 0 0 0 26px;
+	overflow: hidden;
 }
 
 #wikibody {
@@ -688,9 +689,10 @@ div.doppelt .eintrag img {
 .searchbutton {
 	background: url(images/btn_go.gif) no-repeat left 4px;
 	border: 0 solid white;
-	color: transparent;
 	width: 26px;
 	height: 13px;
+	padding: 0 0 0 26px;
+	overflow: hidden;
 }
 
 /* @end */
