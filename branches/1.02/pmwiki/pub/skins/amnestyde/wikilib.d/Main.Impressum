@@ -1,0 +1,17 @@
+version=pmwiki-2.2.0-beta68 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_4; de-de) AppleWebKit/525.18 (KHTML, like Gecko) Version/3.1.2 Safari/525.20.1
+author=Martin Kerz
+charset=UTF-8
+csum=so
+ctime=1206372063
+host=84.165.200.37
+name=Main.Impressum
+rev=5
+targets=
+text=(:title Impressum:)%0a>>rssfeed%3c%3c%0a(:pmfeed feed='https://www.amnesty.de/rss/impressum' max_count=1:)%0a>>%3c%3c%0a%0a>>rssfooter%3c%3c%0a[-[[http://www.amnesty.de/impressum]]-]%0a>>%3c%3c
+time=1220446029
+title=Impressum
+author:1220446029=Martin Kerz
+csum:1220446029=so
+diff:1220446029:1218371228:=3c3%0a%3c (:pmfeed feed='https://www.amnesty.de/rss/impressum' max_count=1:)%0a---%0a> (:pmfeed feed='https://www.amnesty.de/rss-feed/impressum' max_count=1 title='Aktuelle Pressemitteilungen - ':)%0a
+host:1220446029=84.165.200.37
