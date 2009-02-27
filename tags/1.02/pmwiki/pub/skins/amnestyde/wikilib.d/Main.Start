@@ -1,0 +1,12 @@
+version=pmwiki-2.2.0-beta68 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_4; de-de) AppleWebKit/525.18 (KHTML, like Gecko) Version/3.1.2 Safari/525.20.1
+author=Martin Kerz
+charset=UTF-8
+csum=order
+ctime=1197297843
+host=84.165.242.54
+name=Main.Start
+rev=58
+targets=Main.Archiv
+text=(:include Main.Willkommen:)%0a%0a>>doppelt%3c%3c%0a(:pagelist fmt=#blogentries group=Main $:Blog=Ja count=6 order=-ctime:)%0a>>%3c%3c%0a>>archivhinweis%3c%3c%0aÄltere Beiträge finden Sie in unserem [[Main/Archiv]].%0a>>%3c%3c
+time=1220528796

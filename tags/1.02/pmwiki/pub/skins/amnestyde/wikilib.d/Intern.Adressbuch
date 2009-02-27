@@ -1,0 +1,16 @@
+version=pmwiki-2.2.0-beta68 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_4; de-de) AppleWebKit/525.18 (KHTML, like Gecko) Version/3.1.2 Safari/525.20.1
+author=Martin Kerz
+charset=UTF-8
+csum=html
+ctime=1205156692
+host=84.165.250.86
+name=Intern.Adressbuch
+rev=11
+targets=
+text=>>submenu%3c%3c%0a!!Neue Adresse hinzuf&uuml;gen%0a(:messages:)%0a(:fox adresseintrag template=Site.Adressvorlage redirect=1:)%0a(:input hidden target 'Profile.{$$name}':)%0a(:input text name "Name" size=20:)%0a%0a(:input submit post "Hinzuf&uuml;gen":)%0a(:foxend adresseintrag:)%0a>>%3c%3c%0a(:pagelist group=Profile list=normal fmt=#title order=title name=-Template:)
+time=1219839617
+author:1219839617=Martin Kerz
+csum:1219839617=html
+diff:1219839617:1215436569:=2c2%0a%3c !!Neue Adresse hinzuf&uuml;gen%0a---%0a> !!Neue Adresse hinzufügen%0a8c8%0a%3c (:input submit post "Hinzuf&uuml;gen":)%0a---%0a> (:input submit post "Hinzufügen":)%0a
+host:1219839617=84.165.250.86
