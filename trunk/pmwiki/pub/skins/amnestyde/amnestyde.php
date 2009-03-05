@@ -1,7 +1,7 @@
 <?php if (!defined('PmWiki')) exit();
 /*
  * PmWiki amnestyde skin
- * Version 1.0.2  (01.12.2008)
+ * Version 1.0.3  (05.03.2008)
  * @requires PmWiki 2.2
  *
  * Copyright (c) 2008 Amnesty International, Deutsche Sektion
