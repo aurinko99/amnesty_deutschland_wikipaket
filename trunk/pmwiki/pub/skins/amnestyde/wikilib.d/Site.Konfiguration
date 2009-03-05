@@ -8,7 +8,7 @@ host=84.165.230.36
 name=Site.Konfiguration
 rev=50
 targets=Site.Konfiguration
-text=(:Gruppenname:Gruppe Orscholz:)%0a(:Gruppennummer:5555:)%0a(:Kontaktmail:info@amnesty-orscholz.de:)%0a(:kontakt: mailto={Site/Konfiguration$:Kontaktmail} form=#kontaktform fmt=#kontaktpost:)%0a%0a!!Seiteneinstellungen%0a%0a!!!Angaben zur Gruppe:%0a(:input form name=public "{$PageUrl}":)(:input hidden action ptvreplace:)%0a''Gruppenname:'' (:input text Gruppenname value='{$:Gruppenname}':)\\%0a''Gruppennummer:'' (:input text Gruppennummer value={$:Gruppennummer}:)\\%0a''Kontakt-E-Mail:'' (:input text Kontaktmail value={$:Kontaktmail} size=30:)%0a%0a(:input submit post $[Change]:)%0a(:input end:)%0a%0a!!Softwareaktualisierung%0a[[Site.Konfiguration?action=recipecheck|Softwareversionen &uuml;berpr&uuml;fen]]
+text=(:Gruppenname:Gruppe Orscholz:)%0a(:Gruppennummer:5555:)%0a(:Kontaktmail:info@amnesty-orscholz.de:)%0a(:kontakt: mailto={Site/Konfiguration$:Kontaktmail} form=#kontaktform fmt=#kontaktpost:)%0a%0a!!Seiteneinstellungen%0a%0a!!!Angaben zur Gruppe:%0a(:input form name=public "{$PageUrl}":)(:input hidden action ptvreplace:)%0a''Gruppenname:'' (:input text Gruppenname value='{$:Gruppenname}':)\\%0a''Gruppennummer:'' (:input text Gruppennummer value='{$:Gruppennummer}':)\\%0a''Kontakt-E-Mail:'' (:input text Kontaktmail value='{$:Kontaktmail}' size=30:)%0a%0a(:input submit post $[Change]:)%0a(:input end:)%0a%0a!!Softwareaktualisierung%0a[[Site.Konfiguration?action=recipecheck|Softwareversionen &uuml;berpr&uuml;fen]]
 time=1228104408
 author:1228104408=Martin Kerz
 diff:1228104408:1220529039:=
