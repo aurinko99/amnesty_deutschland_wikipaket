@@ -16,7 +16,7 @@
 
 #container {
 	background-color: white;
-	overflow: hidden;
+	overflow: visible;
 	margin: 0 50px;
 	padding-left: 240px;
 }
