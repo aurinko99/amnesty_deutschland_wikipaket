@@ -1,13 +1,13 @@
-version=pmwiki-2.2.0-beta68 ordered=1 urlencoded=1
-agent=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_5; en-us) AppleWebKit/525.27.1 (KHTML, like Gecko) Version/3.2.1 Safari/525.27.1
-author=Martin Kerz
+version=pmwiki-2.2.0 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_7; de-de) AppleWebKit/530.18 (KHTML, like Gecko) Version/4.0.1 Safari/530.18
+author=
 charset=UTF-8
-csum=wieder da
+csum=[[#kopfteil]]
 ctime=1208523898
-host=134.96.43.247
+host=84.165.237.54
 name=Site.Vorlage
-rev=7
+rev=9
 targets=
-text=(:title {$$name}:)%0a(:Blog:ja:)%0a%0a>>eintrag%3c%3c%0aAttach:platzhalter_logo.png"Was ist auf dem Bild zu sehen?"%0a!!{$$(date:d.m.Y)}%0a!{$$name}%0aLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.%0a%0a[[#hauptteil]]%0a!!Zweite Überschrift%0aLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.%0a%0a* Lorem ipsum dolor sit amet, consetetur sadipscing%0a* Lorem ipsum dolor sit amet, consetetur sadipscing%0a* Lorem ipsum dolor sit amet, consetetur sadipscing%0a%0a!!Dritte Überschrift%0aLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.%0a>>%3c%3c
-time=1227601326
+text=(:title {$$name}:)%0a(:Blog:ja:)%0a%0a[[#kopfteil]]%0a>>eintrag%3c%3c%0aAttach:platzhalter_logo.png"Was ist auf dem Bild zu sehen?"%0a!!{$$(date:d.m.Y)}%0a!{$$name}%0aLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.%0a%0a[[#hauptteil]]%0a!!Zweite Überschrift%0aLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.%0a%0a* Lorem ipsum dolor sit amet, consetetur sadipscing%0a* Lorem ipsum dolor sit amet, consetetur sadipscing%0a* Lorem ipsum dolor sit amet, consetetur sadipscing%0a%0a!!Dritte Überschrift%0aLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.%0a>>%3c%3c
+time=1246902526
 title={$$name}

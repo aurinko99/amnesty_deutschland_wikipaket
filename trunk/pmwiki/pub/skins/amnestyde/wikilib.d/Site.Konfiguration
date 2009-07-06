@@ -1,15 +1,12 @@
 version=pmwiki-2.2.0-beta68 ordered=1 urlencoded=1
-agent=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_5; en-us) AppleWebKit/525.27.1 (KHTML, like Gecko) Version/3.2.1 Safari/525.27.1
-author=Martin Kerz
+agent=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_6; en-us) AppleWebKit/528.16 (KHTML, like Gecko) Version/4.0 Safari/528.16
+author=
 charset=UTF-8
-csum=html
+csum=Anf+hrungszeichen
 ctime=1208533228
-host=84.165.230.36
+host=84.165.248.148
 name=Site.Konfiguration
-rev=50
+rev=52
 targets=Site.Konfiguration
 text=(:Gruppenname:Gruppe Orscholz:)%0a(:Gruppennummer:5555:)%0a(:Kontaktmail:info@amnesty-orscholz.de:)%0a(:kontakt: mailto={Site/Konfiguration$:Kontaktmail} form=#kontaktform fmt=#kontaktpost:)%0a%0a!!Seiteneinstellungen%0a%0a!!!Angaben zur Gruppe:%0a(:input form name=public "{$PageUrl}":)(:input hidden action ptvreplace:)%0a''Gruppenname:'' (:input text Gruppenname value='{$:Gruppenname}':)\\%0a''Gruppennummer:'' (:input text Gruppennummer value='{$:Gruppennummer}':)\\%0a''Kontakt-E-Mail:'' (:input text Kontaktmail value='{$:Kontaktmail}' size=30:)%0a%0a(:input submit post $[Change]:)%0a(:input end:)%0a%0a!!Softwareaktualisierung%0a[[Site.Konfiguration?action=recipecheck|Softwareversionen &uuml;berpr&uuml;fen]]
-time=1228104408
-author:1228104408=Martin Kerz
-diff:1228104408:1220529039:=
-host:1228104408=84.165.230.36
+time=1236281637
