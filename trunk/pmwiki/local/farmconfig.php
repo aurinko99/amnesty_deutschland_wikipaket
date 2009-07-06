@@ -69,7 +69,7 @@ SDV($UploadMaxSize,10000000);
 #### DO NOT SHIP ####
 #####################
 
-include_once("$FarmD/cookbook/expirediff.php");
+include_once('cookbook/expirediff.php');
 
 #################
 #### RECIPES ####
@@ -111,10 +111,10 @@ include_once("$FarmD/cookbook/pagerevinline/pagerevinline.php");
 include_once("$FarmD/cookbook/searchbox2.php");
 
 ##AttachDelete
-include_once("$FarmD/cookbook/attachdel.php");
+include_once('cookbook/attachdel.php');
 
 ##Youtube
-include_once("$FarmD/cookbook/swf-sites.php");
+include_once('cookbook/swf-sites.php');
 
 ##Versionskontrolle
 include_once("$FarmD/cookbook/recipecheck.php");
@@ -148,3 +148,10 @@ $EnableRssLink  = 1;
 $EnableAtomLink = 0;
 $FeedLinkSourcePath = 'Main/Start';
 include_once("$FarmD/cookbook/feedlinks.php");
+
+##VerchlŸsselte †bermittlung der Passwšrter (1.04)
+SDVA($InputTags['auth_form'], array(
+':html' => "<form
+action='https://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}'
+method='post'
+name='authform'>\$PostVars"));
