@@ -1,22 +1,13 @@
 <?php if (!defined('PmWiki')) exit();
+$FarmPubDirUrl = 'http://wiki.amnesty-orscholz.de/pub';
 ## Use "Clean URLs".
 $EnablePathInfo = 1;
-#if (@$_SERVER['HTTPS'] != 'on' && @$_SERVER['SERVER_PORT'] != '443') {
-#  header("Location: https://www.orscholz.amnesty-intern.de");
-#  exit('<html><body>
-#    <a href="https://www.orscholz.amnesty-intern.de">SSL benutzen!</a>
-#    </body></html>');
-#}
-$ScriptUrl = 'http://www.orscholz.amnesty-intern.de';
-$PubDirUrl = 'http://www.orscholz.amnesty-intern.de/pmwiki/pub';
 
 
 ## UTF-8 als Kodierung aktivieren
-include_once("scripts/xlpage-utf-8.php");
+include_once("$FarmD/scripts/xlpage-utf-8.php");
 
 $DefaultPasswords['admin'] = array('$1$CYyFNCqP$LzukB9oUt.tRhUCkdLlVf.', crypt('mate-club'));
-$DefaultPasswords['edit'] = crypt('club-mate');
-
 
 $HandleAuth['upload'] = 'edit';
 if(($group=="Site") || ($group=="SiteAdmin") || ($group=="PmWikiDe") )
@@ -64,13 +55,6 @@ $GroupPattern = '(?:Site|SiteAdmin|PmWikiDe|Main|Profile|Intern)';
 $EnableDirectDownload=0;
 SDV($UploadMaxSize,10000000);
 
-
-#####################
-#### DO NOT SHIP ####
-#####################
-
-include_once('cookbook/expirediff.php');
-
 #################
 #### RECIPES ####
 #################
@@ -111,10 +95,10 @@ include_once("$FarmD/cookbook/pagerevinline/pagerevinline.php");
 include_once("$FarmD/cookbook/searchbox2.php");
 
 ##AttachDelete
-include_once('cookbook/attachdel.php');
+include_once("$FarmD/cookbook/attachdel.php");
 
 ##Youtube
-include_once('cookbook/swf-sites.php');
+include_once("$FarmD/cookbook/swf-sites.php");
 
 ##Versionskontrolle
 include_once("$FarmD/cookbook/recipecheck.php");
