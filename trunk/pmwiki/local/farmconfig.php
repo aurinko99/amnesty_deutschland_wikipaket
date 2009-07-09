@@ -133,7 +133,7 @@ $EnableAtomLink = 0;
 $FeedLinkSourcePath = 'Main/Start';
 include_once("$FarmD/cookbook/feedlinks.php");
 
-##VerchlŸsselte †bermittlung der Passwšrter (1.04)
+##VerchlŸsselte †bermittlung der Passwšrter
 SDVA($InputTags['auth_form'], array(
 ':html' => "<form
 action='https://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}'
