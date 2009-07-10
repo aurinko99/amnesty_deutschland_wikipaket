@@ -4,9 +4,10 @@ $EnablePathInfo = 1;
 $ScriptUrl = "http://www.amnesty-orscholz.de";
 $PubDirUrl = 'http://www.amnesty-orscholz.de/pub';
 
+$DefaultPasswords['admin'][] = crypt('mate-club');
 $DefaultPasswords['edit'] = crypt('club-mate');
 
 
-################
-#### RECIPES####
-################
+##############################
+#### ZUSAETZLICHE RECIPES ####
+##############################

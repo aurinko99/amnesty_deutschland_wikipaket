@@ -7,7 +7,7 @@ $EnablePathInfo = 1;
 ## UTF-8 als Kodierung aktivieren
 include_once("$FarmD/scripts/xlpage-utf-8.php");
 
-$DefaultPasswords['admin'] = array('$1$CYyFNCqP$LzukB9oUt.tRhUCkdLlVf.', crypt('mate-club'));
+$DefaultPasswords['admin'] = array(crypt('$1$CYyFNCqP$LzukB9oUt.tRhUCkdLlVf.'));
 
 $HandleAuth['upload'] = 'edit';
 if(($group=="Site") || ($group=="SiteAdmin") || ($group=="PmWikiDe") )
