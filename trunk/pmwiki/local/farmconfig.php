@@ -77,7 +77,7 @@ include_once("$FarmD/cookbook/pmfeed.php");
 include_once("$FarmD/cookbook/fox/fox.php");
 
 #Nummerierte Seiten
-include_once("$FarmD/cookbook/serial.php");
+include_once("$FarmD/cookbook/powertools.php");
 
 #GroupTitle
 include_once("$FarmD/cookbook/grouptitle.php");
