@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-/*  Copyright 2004-2007 Patrick R. Michaud (pmichaud@pobox.com)
+/*  Copyright 2004-2009 Patrick R. Michaud (pmichaud@pobox.com)
     This file is part of PmWiki; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published
     by the Free Software Foundation; either version 2 of the License, or
@@ -554,9 +554,11 @@ function FPLCountA($pagename, &$matches, $opt) {
 
 ##  FPLTemplate handles PagelistTemplates
 function FPLTemplate($pagename, &$matches, $opt) {
-  global $Cursor, $FPLTemplatePageFmt, $RASPageName, $PageListArgPattern;
+  global $Cursor, $FPLTemplatePageFmt, $RASPageName, $PageListArgPattern,
+    $FPLTemplateMarkupFunction;
   SDV($FPLTemplatePageFmt, array('{$FullName}',
     '{$SiteGroup}.LocalTemplates', '{$SiteGroup}.PageListTemplates'));
+  SDV($FPLTemplateMarkupFunction, 'MarkupToHTML');
 
   StopWatch("FPLTemplate begin");
   $template = @$opt['template'];
@@ -659,7 +661,7 @@ function FPLTemplate($pagename, &$matches, $opt) {
   if ($class) $class = " class='$class'";
   $wrap = @$opt['wrap'];
   if ($wrap != 'inline') {
-    $out = MarkupToHTML($pagename, $out, array('escape' => 0, 'redirect'=>1));
+    $out = $FPLTemplateMarkupFunction($pagename, $out, array('escape' => 0, 'redirect'=>1));
     if ($wrap != 'none') $out = "<div$class>$out</div>";
   }
   $Cursor = $savecursor;

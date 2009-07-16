@@ -203,7 +203,8 @@ $HandleAuth = array(
   'logout' => 'read', 'login' => 'login');
 $ActionTitleFmt = array(
   'edit' => '| $[Edit]',
-  'attr' => '| $[Attributes]');
+  'attr' => '| $[Attributes]',
+  'login' => '| $[Login]');
 $DefaultPasswords = array('admin'=>'*','read'=>'','edit'=>'','attr'=>'');
 $AuthCascade = array('edit'=>'read', 'attr'=>'edit');
 $AuthList = array('' => 1, 'nopass:' => 1, '@nopass' => 1);
@@ -385,7 +386,7 @@ function PZZ($x,$y='') { return ''; }
 function PRR($x=NULL) 
   { if ($x || is_null($x)) $GLOBALS['RedoMarkupLine']++; return $x; }
 function PUE($x)
-  { return preg_replace('/[\\x80-\\xff \'"]/e', "'%'.dechex(ord('$0'))", $x); }
+  { return preg_replace('/[\\x80-\\xff \'"<>]/e', "'%'.dechex(ord('$0'))", $x); }
 function PQA($x) { 
   $out = '';
   if (preg_match_all('/([a-zA-Z]+)\\s*=\\s*("[^"]*"|\'[^\']*\'|\\S*)/',
@@ -538,11 +539,12 @@ function mkdirp($dir) {
     rmdir($dir);
   }
   $parent = realpath(dirname($dir)); 
+  $bdir = basename($dir);
   $perms = decoct(fileperms($parent) & 03777);
   $msg = "PmWiki needs to have a writable <tt>$dir/</tt> directory 
     before it can continue.  You can create the directory manually 
     by executing the following commands on your server:
-    <pre>    mkdir $parent/$dir\n    chmod 777 $parent/$dir</pre>
+    <pre>    mkdir $parent/$bdir\n    chmod 777 $parent/$bdir</pre>
     Then, <a href='{$ScriptUrl}'>reload this page</a>.";
   $safemode = ini_get('safe_mode');
   if (!$safemode) $msg .= "<br /><br />Or, for a slightly more 
@@ -721,7 +723,10 @@ function SetProperty($pagename, $prop, $value, $sep = NULL) {
 ## $PageTextVarPatterns) into a page's $PCache entry, and returns
 ## the property associated with $var.
 function PageTextVar($pagename, $var) {
-  global $PCache, $PageTextVarPatterns;
+  global $PCache, $PageTextVarPatterns, $MaxPageTextVars;
+  SDV($MaxPageTextVars, 500);
+  static $status;
+  if(@$status["$pagename:$var"]++ > $MaxPageTextVars) return '';
   if (!@$PCache[$pagename]['=pagetextvars']) {
     $pc = &$PCache[$pagename];
     $pc['=pagetextvars'] = 1;
@@ -835,7 +840,7 @@ function XLPage($lang,$p) {
   $text = preg_replace("/=>\\s*\n/",'=> ',@$page['text']);
   foreach(explode("\n",$text) as $l)
     if (preg_match('/^\\s*[\'"](.+?)[\'"]\\s*=>\\s*[\'"](.+)[\'"]/',$l,$match))
-      $xl[stripslashes($match[1])] = stripslashes($match[2]);
+      $xl[stripslashes($match[1])] = htmlspecialchars(stripslashes($match[2]));
   if (isset($xl)) {
     if (@$xl['xlpage-i18n']) {
       $i18n = preg_replace('/[^-\\w]/','',$xl['xlpage-i18n']);
@@ -1042,7 +1047,7 @@ function Abort($msg, $info='') {
     $info = "<p class='vspace'><a target='_blank' rel='nofollow' href='http://www.pmwiki.org/pmwiki/info/$info'>$[More information]</a></p>";
   $msg = "<h3>$[PmWiki can't process your request]</h3>
     <p class='vspace'>$msg</p>
-    <p class='vspace'>We are sorry for any inconvenience.</p>
+    <p class='vspace'>$[We are sorry for any inconvenience].</p>
     $info
     <p class='vspace'><a href='$ScriptUrl'>$[Return to] $ScriptUrl</a></p>";
   @header("Content-type: text/html; charset=$Charset");
@@ -1215,7 +1220,6 @@ function RetrieveAuthSection($pagename, $pagesection, $list=NULL, $auth='read') 
   $RASPageName = '';
   return false;
 }
-
 
 function IncludeText($pagename, $inclspec) {
   global $MaxIncludes, $IncludeOpt, $InclCount;
@@ -1408,7 +1412,8 @@ function LinkPage($pagename,$imap,$path,$alt,$txt,$fmt=NULL) {
              ? $LinkPageSelfFmt : $LinkPageExistsFmt;
   }
   $url = PageVar($tgtname, '$PageUrl');
-  if (@$EnableLinkPageRelative) 
+  $txt = str_replace("$", "&#036;", $txt);
+  if (@$EnableLinkPageRelative)
     $url = preg_replace('!^[a-z]+://[^/]*!i', '', $url);
   $fmt = str_replace(array('$LinkUrl', '$LinkText'),
                      array($url.PUE($qf), $txt), $fmt);
@@ -1818,14 +1823,19 @@ function PmWikiAuth($pagename, $level, $authprompt=true, $since=0) {
     $AuthList["id:-$AuthId"] = -1;
     $AuthList["id:*"] = 1;
   }
-  $gn = FmtPageName($GroupAttributesFmt, $pagename);
-  if (!isset($acache[$gn])) {
-    $gp = ReadPage($gn, READPAGE_CURRENT);
+  ## To allow @_site_edit in GroupAttributes, we cache it first
+  if (!isset($acache['@site'])) {
     foreach($DefaultPasswords as $k => $v) {
       $x = array(2, array(), '');
       $acache['@site'][$k] = IsAuthorized($v, 'site', $x);
       $AuthList["@_site_$k"] = $acache['@site'][$k][0] ? 1 : 0;
-      $acache[$gn][$k] = IsAuthorized(@$gp["passwd$k"], 'group', 
+    }
+  }
+  $gn = FmtPageName($GroupAttributesFmt, $pagename);
+  if (!isset($acache[$gn])) {
+    $gp = ReadPage($gn, READPAGE_CURRENT);
+    foreach($DefaultPasswords as $k => $v) {
+      $acache[$gn][$k] = IsAuthorized(@$gp["passwd$k"], 'group',
                                       $acache['@site'][$k]);
     }
   }
@@ -1850,6 +1860,7 @@ function PmWikiAuth($pagename, $level, $authprompt=true, $since=0) {
   $postvars = '';
   foreach($_POST as $k=>$v) {
     if ($k == 'authpw' || $k == 'authid') continue;
+    $k = htmlspecialchars(stripmagic($k), ENT_QUOTES);
     $v = str_replace('$', '&#036;', 
              htmlspecialchars(stripmagic($v), ENT_COMPAT));
     $postvars .= "<input type='hidden' name='$k' value=\"$v\" />\n";
@@ -1953,7 +1964,8 @@ function PasswdVar($pagename, $level) {
                                        (array)$page['=passwd'][$level]));
   if ($pwsource == 'group' || $pwsource == 'site') {
     $FmtV['$PWSource'] = $pwsource;
-    $setting = FmtPageName('$[(set by $PWSource)] ', $pagename) . $setting;
+    $setting = FmtPageName('$[(set by $PWSource)] ', $pagename)
+       . htmlspecialchars($setting);
   }
   return $setting;
 }
@@ -1971,7 +1983,7 @@ function PrintAttrForm($pagename) {
     if (strncmp($attr, 'passwd', 6) == 0) {
       $setting = PageVar($pagename, '$Passwd'.ucfirst(substr($attr, 6)));
       $value = '';
-    } else { $setting = @$page[$attr]; $value = @$page[$attr]; }
+    } else { $setting = $value = htmlspecialchars(@$page[$attr]); }
     $prompt = FmtPageName($p,$pagename);
     echo "<tr><td>$prompt</td>
       <td><input type='text' name='$attr' value='$value' /></td>
@@ -2036,7 +2048,7 @@ function HandleLogoutA($pagename, $auth = 'read') {
   SDV($LogoutCookies, array());
   @session_start();
   $_SESSION = array();
-  if (isset($_COOKIE[session_name()]))
+  if ( session_id() != '' || isset($_COOKIE[session_name()]) )
     setcookie(session_name(), '', time()-43200, '/');
   foreach ($LogoutCookies as $c)
     if (isset($_COOKIE[$c])) setcookie($c, '', time()-43200, '/');
