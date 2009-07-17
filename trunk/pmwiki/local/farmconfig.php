@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-$FarmPubDirUrl = 'http://wiki.amnesty-orscholz.de/pub';
+$FarmPubDirUrl = 'http://wikifarm.amnesty-intern.de/pub';
 ## Use "Clean URLs".
 $EnablePathInfo = 1;
 
@@ -18,9 +18,8 @@ if(($group=="Site") || ($group=="SiteAdmin") || ($group=="PmWikiDe") )
 	$HandleAuth['attr'] = 'edit';
 	}
 
+#Uploads aktivieren
 $EnableUpload = 1;
-$DefaultPasswords['upload'] = crypt('orscholz_aktiv');
-#$UploadPrefixFmt = ''; #Flacher Downloadordner: FŸr Gruppenwikis aktivieren
 
 ##Gruppenname
 global $AiGroupName;
