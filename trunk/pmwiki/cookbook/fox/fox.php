@@ -26,7 +26,7 @@
 +----------------------------------------------------------------------+
 */
 
-$RecipeInfo['Fox']['Version'] = '2008-11-26';
+$RecipeInfo['Fox']['Version'] = '2009-05-15';
 
 $FmtPV['$FoxVersion'] = "'{$RecipeInfo["Fox"]["Version"]}'";
 
@@ -356,6 +356,8 @@ function FoxHandlePost($pagename, $auth) {
 
 	//do {$$var} input field replacements and process {$$(expre ...)} markup expressions
 	FoxInputVarReplace($pagename, $fx);
+	//DEBUG//
+	if($FoxDebug>2) { echo "<pre>\$fx array after IV Replace "; print_r($fx); echo "</pre>"; }
 
 	//make ptv array from ptv_ fields
 	FoxPTVFields($pagename, $fx);
@@ -444,7 +446,7 @@ function FoxRedirectFmt ($pagename, $fx, $tar, $redir) {
 
 ## create arrays from special fields & build target array
 function FoxTargetList ($pagename, &$fx) {
-	global $FoxDebug; if($FoxDebug) echo "<br /> TARGETLIST>"; //DEBUG//
+	global $FoxDebug; if($FoxDebug>4) echo "<br /> TARGETLIST>"; //DEBUG//
 	//assign current page as target if no target is specified, but template is given. 
 	//exclude this for dangerous actions to prevent overwriting form page  
 	if (!isset($fx[':target']) &&  !isset($fx['target']) && !isset($fx['newedit'])) 
@@ -457,11 +459,14 @@ function FoxTargetList ($pagename, &$fx) {
 		if($fx['foxcopy']==1) $fx['foxaction'] = 'copy';
 		
 	//create upload target
-	if (isset($fx['upload']) || isset($fx['uptarget'])) {
-		if (@$fx['uptarget']) $fx['uptarget'] = FoxGroupName($pagename, $fx, $fx['uptarget']);
-		elseif ($fx['upload']==1 && !$fx['target']=='') 
-			if (!strstr(',',$fx['target'])) $fx['uptarget'] = FoxGroupName($pagename, $fx, $fx['target']);
-			else $fx['uptarget'] = $pagename;
+	if (isset($fx['uptarget'])) 
+		$fx['uptarget'] = FoxGroupName($pagename, $fx, $fx['uptarget']);
+	elseif ($fx['upload']==1) {
+		if (isset($fx['target'])) {
+			$tgts = explode(',',$fx['target']); 
+			$fx['uptarget'] = FoxGroupName($pagename, $fx, $tgts[0]);
+		}
+		else $fx['uptarget'] = $pagename;
 	}
 
 	//create newedit target, will be used as last element in target array
@@ -674,7 +679,8 @@ function FoxUpdatePages($pagename, $fx, $tar) {
 					$IsPagePosted = 1;
 					$FoxNotifyTemplatePageFmt = MakePageName($pagename, $targ['template']);
 					$FoxNotifyLists[] = $FoxNotifyListsGroup.".".PageVar($tgtname, '$Name');
-					register_shutdown_function('FoxNotifyUpdate', $pagename, getcwd(), $fx);
+					FoxNotifyUpdate($pagename, getcwd(), $fx);
+					//register_shutdown_function('FoxNotifyUpdate', $pagename, getcwd(), $fx);
 					$counter++;
 					if (isset($targ['foxsuccess'])) $FoxMsgFmt[] = $targ['foxsuccess'];
 					elseif (isset($fx['foxsuccess'])) $FoxMsgFmt[] = $fx['foxsuccess'];
@@ -821,7 +827,7 @@ function FoxAddText( $pn, $text, $template, $fx, $targ ) {
 							 else { $pos = $ms['Mpos'] + $ms['Mlen']; break; }
 		case 'insertbefore' : if (!isset($ms['Mpos'])) { $FoxMsgFmt[] = "$[Error: Found no mark to insert before!]"; return $text; }
 							 else { $pos = $ms['Mpos']; break; }
-		default: $FoxMsgFmt = "$[Error:] '{$ms['put']}' $[is not a valid option with 'add'!] "; return $text;
+		default: $FoxMsgFmt[] = "$[Error:] '{$ms['put']}' $[is not a valid option with 'add'!] "; return $text;
 	}
 	//add line breaks as needed
 	$temp =  $pre.$template.$aft;
@@ -890,10 +896,11 @@ function FoxSetMarks($pn, $text, $fx, $targ) {
 		if ($mk[$i]=='') continue;
 		$mv = array();
 		$pat = preg_quote( $mk[$i],'/');
-		if(preg_match_all("/$pat/", $text, $match, PREG_OFFSET_CAPTURE))
+		if(preg_match_all("/$pat/", $text, $match, PREG_OFFSET_CAPTURE)) {
 			foreach($match[0] as $k => $mark) {
 				$mv[$k] = array( $mark[1], $mark[1]+strlen($mark[0]) );
 			}
+		}
 		$marks[$i] = $mv;
 	}
 		//DEBUG//
@@ -1153,7 +1160,7 @@ function FoxInputVarReplace($pn, &$fx) {
 		if(is_array($value)) {
 			foreach($value as $i=>$val) {
 				if (strstr($val, '{$$')) {
-						if($FoxDebug>3) echo " N>".$key."[".$i."]=".$val;//DEBUG//
+						if($FoxDebug>3) echo "<pre> N>".$key."[".$i."]=".$val."</pre>";//DEBUG//
 					$fx[$key][$i] = FoxIVReplace($pn, $fx, $val);
 				}
 			}
@@ -1236,7 +1243,7 @@ function FoxVarReplace($pn, $fx, $targ, &$str) {
 # In the InputVarReplace process if the field is an array, a comma-separated list of
 # the array elements will be returned (not just the first array element)
 function FoxValue($fx, $targ, $fullvar, $var, $index=NULL) {
-	global $FoxDebug; if($FoxDebug>2) echo "<pre>VALUE>".$var."=</pre>"; //DEBUG//
+	global $FoxDebug; if($FoxDebug>2) echo "<pre>VALUE>".$var."="; //DEBUG//
 	$fti = 'none';
 	if ($targ) $fti =  $targ['taridx'];
 	
@@ -1251,7 +1258,7 @@ function FoxValue($fx, $targ, $fullvar, $var, $index=NULL) {
 				$val = $val[$index];
 		}
 		//DEBUG//
-		if($FoxDebug>2) echo "<pre>".$val."</pre>"; //DEBUG
+		if($FoxDebug>2) echo $val."</pre>"; //DEBUG
 		return $val;
 	}
 	//var is no key name: if action 'add' return empty, otherwise full var string
@@ -1323,7 +1330,7 @@ function FoxPTVAddUpdate($pagename, $text, $fx, $targ ) {
 		if($targ['ptvfields']) {
 			if (is_array($targ['ptvfields'])) $fields = $targ['ptvfields'];
 			else $fields = explode(',', $targ['ptvfields']);
-			foreach($fields as $n)
+			foreach ($fields as $n)
 				$update[$n] = $fx[$n];
 		}
 		else $update = $fx; //use all fields to look for PTVs
@@ -1337,7 +1344,8 @@ function FoxPTVAddUpdate($pagename, $text, $fx, $targ ) {
 			if (!preg_match_all($pat, $text, $match, PREG_SET_ORDER)) continue;
 			foreach($match as $m) {   //$m[0]=all, $m[1]=beforevalue, $m[2]=name, $m[3]=value, $m[4]=aftervalue			
 				$ptvs[] = $var = $m[2];
-				if (isset($update[$var])) $val = $update[$var];  //new value
+				if (!array_key_exists($var, $update)) continue;
+				if (isset($update[$var])) $val = $update[$var]; //new value
 				else $val = '';
 				if ($val=='') { //empty input gets ignored, unless ptvclear is set to 1 or to ptv field names
 					if (!($ptvclear[0]==1 || in_array($var, $ptvclear))) continue;
@@ -1431,7 +1439,7 @@ function FoxPagePermission($pagename, $act, $targetname, $fx) {
 ## this runs before individual page processing
 function FoxSecurityCheck($pagename, $tar, &$fx) {
 	global $FoxDebug; if($FoxDebug) echo " SECURITY>";
-	global $FoxNameFmt, $EnableAccessCode, $EnablePostCaptchaRequired;
+	global $FoxNameFmt, $FoxMsgFmt, $EnableAccessCode, $EnablePostCaptchaRequired;
 	//if preview
 	if ($fx['preview']) return '';
 	
@@ -1453,10 +1461,10 @@ function FoxSecurityCheck($pagename, $tar, &$fx) {
 		foreach ($check as $pt) {
 			$page = MakePageName($pagename, $pt);
 			if($pagename==$page) { $FoxMsgFmt[] = "$[Error: You are not allowed to post to this page!]"; $stop=1; continue;}
-			if(PageExists($page) AND in_array($pt, $targets)) { 
+			if(PageExists($page) AND in_array($page, $targets)) { 
 				$FoxMsgFmt[] = "$[Page] [[$pt]] $[exists already. Please choose another page name!]"; $stop=1; continue;}
 		}
-		if ($stop==1) FoxAbort($pagename, "$[Error: please check your page targets!]");
+		if ($stop==1) FoxAbort($pagename,"");
 	}
 	//check for 'post' and 'cancel' from submit button 
 	if ( !isset($fx['post']) AND !isset($fx['cancel']) AND !isset($fx['preview']) ) {

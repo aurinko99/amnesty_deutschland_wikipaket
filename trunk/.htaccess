@@ -3,8 +3,8 @@ RewriteEngine On
 # The rewrite base will be the document root.
 RewriteBase /
 # Send requests without parameters to pmwiki.php.
-RewriteRule ^$           pmwiki/pmwiki.php  [L]
+RewriteRule ^$           gruppe/index.php  [L]
 # Send requests for index.php to pmwiki.php.
-RewriteRule ^index.php$  pmwiki/pmwiki.php  [L]
+#RewriteRule ^index.php$  gruppe/pmwiki.php  [L]
 # Send requests to pmwiki.php, appending the query string part.
-RewriteRule ^([A-Z0-9\xa0-\xff].*)$ pmwiki/pmwiki.php?n=$1  [QSA,L]
+RewriteRule ^([A-Z0-9\xa0-\xff].*)$ gruppe/index.php?n=$1  [QSA,L]

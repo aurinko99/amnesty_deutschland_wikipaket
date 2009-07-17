@@ -10,7 +10,7 @@
    See Cookbook:FoxEdit for documentation and instructions.
    Include this script after including fox.php.
 */
-$RecipeInfo['FoxEdit']['Version'] = '2008-07-14';
+$RecipeInfo['FoxEdit']['Version'] = '2009-05-11';
 
 //default edit form pages
 SDV($FoxEditPTVSectionForm, 'FoxTemplates.EditPTVForm');        
@@ -38,7 +38,7 @@ function FoxHandleEdit($pagename) {
 		$args = RequestArgs(); //fetch GET or POST arguments
 		FoxURLArgs($pagename); //set url arguments for use with preview
 	}
-	#echo "<pre>\$args "; print_r($args); echo "</pre>"; //DEBUG
+	#	echo "<pre>\$args "; print_r($args); echo "</pre>"; //DEBUG
 
 	$EditSource = (isset($args['source'])) ? $args['source'] : $pagename;
 	$target = (isset($args['target'])) ? $args['target'] : $EditSource;
@@ -46,7 +46,7 @@ function FoxHandleEdit($pagename) {
 	$section = (isset($args['section']) ? urldecode($args['section']) : '');
 
 	//open targetpage, get section, set InputValues for 'text' control
-	$fulltarget = $target.$section;
+	$fulltarget = $target.$section; 
 	$EditTarget = MakePagename($pagename, $target);
 	$page = RetrieveAuthPage($EditTarget, $FoxAuth, true);
 	if (!$page) Abort( "?cannot read $page");
@@ -61,8 +61,9 @@ function FoxHandleEdit($pagename) {
 	else {
 		if (strstr($section,'#')) {
 			$mode = 'section';
+			$section = substr($section,1); //remove initial #
 			$fts = FoxTextSection($page['text'], $fulltarget); 
-			if ($fts['pos']==0) FoxAbort($pagename,"$[Error: cannot find section] '$EditSection'");
+			if ($fts['pos']==0) FoxAbort($pagename,"$[Error: cannot find section] '$section'");
 			$text = $fts['text'];
 			$formpage = $FoxEditPageSectionForm;
 		} else {
