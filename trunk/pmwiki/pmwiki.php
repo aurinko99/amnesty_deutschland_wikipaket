@@ -840,7 +840,7 @@ function XLPage($lang,$p) {
   $text = preg_replace("/=>\\s*\n/",'=> ',@$page['text']);
   foreach(explode("\n",$text) as $l)
     if (preg_match('/^\\s*[\'"](.+?)[\'"]\\s*=>\\s*[\'"](.+)[\'"]/',$l,$match))
-      $xl[stripslashes($match[1])] = htmlspecialchars(stripslashes($match[2]));
+      $xl[stripslashes($match[1])] = stripslashes($match[2]);
   if (isset($xl)) {
     if (@$xl['xlpage-i18n']) {
       $i18n = preg_replace('/[^-\\w]/','',$xl['xlpage-i18n']);
@@ -1960,8 +1960,8 @@ function PasswdVar($pagename, $level) {
     $FmtV['$PWCascade'] = substr($pwsource, 8);
     return FmtPageName('$[(using $PWCascade password)]', $pagename);
   }
-  $setting = implode(' ', preg_replace('/^(?!@|\\w+:).+$/', '****',
-                                       (array)$page['=passwd'][$level]));
+  $setting = htmlspecialchars(implode(' ', preg_replace('/^(?!@|\\w+:).+$/', '****',
+                                       (array)$page['=passwd'][$level])));
   if ($pwsource == 'group' || $pwsource == 'site') {
     $FmtV['$PWSource'] = $pwsource;
     $setting = FmtPageName('$[(set by $PWSource)] ', $pagename)
