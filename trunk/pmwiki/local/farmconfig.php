@@ -7,7 +7,7 @@ $EnablePathInfo = 1;
 ## UTF-8 als Kodierung aktivieren
 include_once("$FarmD/scripts/xlpage-utf-8.php");
 
-$DefaultPasswords['admin'] = array(crypt('$1$CYyFNCqP$LzukB9oUt.tRhUCkdLlVf.'));
+$DefaultPasswords['admin'] = array('$1$CYyFNCqP$LzukB9oUt.tRhUCkdLlVf.');
 
 $HandleAuth['upload'] = 'edit';
 if(($group=="Site") || ($group=="SiteAdmin") || ($group=="PmWikiDe") )
@@ -138,3 +138,7 @@ SDVA($InputTags['auth_form'], array(
 action='https://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}'
 method='post'
 name='authform'>\$PostVars"));
+
+##Favicon
+SDV($FavIcon, 'http://wikifarm.amnesty-intern.de/pub/skins/amnestyde/favicon.ico');
+include_once("$FarmD/cookbook/WebsiteIcon.php");
