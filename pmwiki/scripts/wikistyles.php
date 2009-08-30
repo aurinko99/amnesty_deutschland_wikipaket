@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-/*  Copyright 2004-2007 Patrick R. Michaud (pmichaud@pobox.com)
+/*  Copyright 2004-2009 Patrick R. Michaud (pmichaud@pobox.com)
     This file is part of PmWiki; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published
     by the Free Software Foundation; either version 2 of the License, or
@@ -123,7 +123,8 @@ function ApplyStyles($x) {
         else {
           $c = @$style['class'];
           $style=array_merge($style,(array)$WikiStyle[$m[1]]);
-          if ($c) $style['class'] = $c . ' ' . $style['class'];
+          if ($c && !preg_match("/(^| )$c( |$)/", $style['class']) )
+            $style['class'] = $c . ' ' . $style['class'];
         }
       }
       if (@$style['define']) {

@@ -1689,8 +1689,11 @@ function PostPage($pagename, &$page, &$new) {
     foreach($keys as $k)
       if (preg_match("/^\\w+:(\\d+)/",$k,$match) && $match[1]<$keepgmt)
         unset($new[$k]);
-    if (preg_match("/$DeleteKeyPattern/",$new['text']))
-      $WikiDir->delete($pagename);
+    if (preg_match("/$DeleteKeyPattern/",$new['text'])){
+      if(@$new['passwdattr']>'' && !CondAuth($pagename, 'attr'))
+        Abort('$[The page has an "attr" attribute and cannot be deleted.]');
+      else  $WikiDir->delete($pagename);
+    }
     else WritePage($pagename,$new);
     $IsPagePosted = true;
   }
@@ -1994,7 +1997,7 @@ function PrintAttrForm($pagename) {
 }
 
 function HandleAttr($pagename, $auth = 'attr') {
-  global $PageAttrFmt,$PageStartFmt,$PageEndFmt;
+  global $HandleAttrFmt,$PageAttrFmt,$PageStartFmt,$PageEndFmt;
   $page = RetrieveAuthPage($pagename, $auth, true, READPAGE_CURRENT);
   if (!$page) { Abort("?unable to read $pagename"); }
   PCache($pagename,$page);

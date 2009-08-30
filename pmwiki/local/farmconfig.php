@@ -23,7 +23,7 @@ $EnableUpload = 1;
 
 ##Gruppenname
 global $AiGroupName;
-$AiGroupName=PageVar('Site.Konfiguration','$:Gruppenname');
+#$AiGroupName=PageVar('Site.Konfiguration','$:Gruppenname');
 $WikiTitle = "Amnesty International - $AiGroupName";
 
 #Central European Time:
@@ -106,7 +106,7 @@ include_once("$FarmD/cookbook/recipecheck.php");
 include_once("$FarmD/cookbook/pmform.php");
 $PmFormMailHeaders = 'Content-type: text/plain; charset="utf-8"';
 global $AiContactMail;
-$AiContactMail=PageVar('Site.Konfiguration','$:Kontaktmail');
+#$AiContactMail=PageVar('Site.Konfiguration','$:Kontaktmail');
 $PmForm['kontakt'] = 'mailto=$AiContactMail form=#kontaktform fmt=#kontaktpost';
 
 ##RSS
