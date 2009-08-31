@@ -1,0 +1,11 @@
+version=pmwiki-2.2.0 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.19) Gecko/20081216 Ubuntu/8.04 (hardy) Firefox/2.0.0.19
+author=Petko
+charset=ISO-8859-1
+csum=revert
+host=81.65.14.164
+name=PmWikiDe.SideBar
+rev=49
+targets=PmWikiDe.PmWikiDe,PmWikiDe.WikiWikiWeb,PmWikiDe.WikiElements,PmWikiDe.Installation,PmWikiDe.DocumentationIndex,PmWikiDe.WikiSandbox,PmWikiDe.SideBar
+text=%25sidehead%25[[PmWikiDe|PmWiki (''deutsch'')]]%0a* [[WikiWikiWeb | Was ist ein Wiki?]]%0a* [[WikiElements | + ]]%0a* [[Installation | + ]]%0a* [[DocumentationIndex | + ]]%0a* [[WikiSandbox | + ]]%0a%25right%25[--[[PmWikiDe/SideBar?action=edit|$[Edit]]]--]%0a----%0a'''Englisch:'''%0a(:include Site/SideBar:)%0a
+time=1236219893
