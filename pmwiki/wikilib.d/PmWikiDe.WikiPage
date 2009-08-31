@@ -1,0 +1,16 @@
+<<<<<<< HEAD:pmwiki/wikilib.d/PmWikiDe.WikiPage
+version=pmwiki-2.2.0-beta65 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+author=st
+charset=ISO-8859-1
+csum=
+ctime=1173023178
+host=81.62.253.51
+name=PmWikiDe.WikiPage
+rev=10
+targets=PmWikiDe.WikiWikiWeb,PmWikiDe.WikiStructure,PmWikiDe.WikiGroup
+text=(:title Wiki-Seite:)%0a(:Summary: Erklärung Wiki-Seite:)%0a(:Original_Page: PmWiki.{$Name}:)%0a(:Translation_Date: 2008-03-10:)%0a(:Translation_Status: %25green%25fertig%25%25:)%0a(:Audience: Grundlagen:)%0a%0aEine WikiSeite ist der Grundbaustein eines [[WikiWikiWeb|+]] und enthält Text und Bilder.%0a%0aMehr Information darüber bei [[WikiStructure|+]], [[WikiGroup|+]] und [[WikiWikiWeb|+]]. %0a%0a
+time=1205429170
+title=Wiki-Seite
+=======
+>>>>>>> d6e427d432381187e71c93a70239d004e9d7efa4:pmwiki/wikilib.d/PmWikiDe.WikiPage

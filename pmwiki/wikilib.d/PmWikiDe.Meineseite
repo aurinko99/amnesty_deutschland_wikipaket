@@ -1,0 +1,14 @@
+<<<<<<< HEAD:pmwiki/wikilib.d/PmWikiDe.Meineseite
+version=pmwiki-2.1.11 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (Windows; U; Windows NT 5.0; de; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+author=
+csum=
+ctime=1150988615
+host=192.166.164.193
+name=PmWikiDe.Meineseite
+rev=1
+targets=
+text=Dies ist also meine Seite. Eine schÃ¶ne neue Seite zum Thema "meine Seite".
+time=1150988615
+=======
+>>>>>>> d6e427d432381187e71c93a70239d004e9d7efa4:pmwiki/wikilib.d/PmWikiDe.Meineseite

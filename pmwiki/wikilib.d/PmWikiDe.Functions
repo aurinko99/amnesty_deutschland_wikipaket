@@ -1,0 +1,16 @@
+<<<<<<< HEAD:pmwiki/wikilib.d/PmWikiDe.Functions
+version=pmwiki-2.2.0-beta65 ordered=1 urlencoded=1
+agent=Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+author=st
+charset=ISO-8859-1
+csum=
+ctime=1162888231
+host=81.62.212.18
+name=PmWikiDe.Functions
+rev=19
+targets=PmWiki.Functions,PmWikiDe.DocumentationIndex
+text=(:title Funktionen:)%0a(:Summary: Beschreibung verschiedener Funktionen:)%0a(:Original_Page: PmWiki.{$Name}:)%0a(:Translation_Date: 2007-04-03:)%0a(:Translation_Status: %25red%25ToDo%25%25:)%0a(:Audience: Autoren (Fortgeschrittene):)%0a%0a%25red%25'''''Die Seite [[PmWiki.Functions]] wurde noch nicht übersetzt. Hilf mit und übersetze die englische Seite hier.'''''%25%25%0a%0a%25trail%25 %3c%3c|[[DocumentationIndex|Dokumentationsindex]]|>>
+time=1205251069
+title=Funktionen
+=======
+>>>>>>> d6e427d432381187e71c93a70239d004e9d7efa4:pmwiki/wikilib.d/PmWikiDe.Functions
