@@ -1,11 +1,38 @@
 <?php if (!defined('PmWiki')) exit();
-## Use "Clean URLs".
+##############################
+#### INTERNA. BITTE NICHT ####
+#### VER€NDERN! ##############
+##############################
+
 $EnablePathInfo = 1;
-$ScriptUrl = "http://www.amnesty-orscholz.de";
+global $AiGroupName;
+global $AiContactMail;
+global $AiGroupNumber;
 
-$DefaultPasswords['admin'][] = crypt('mate-club');
-$DefaultPasswords['edit'] = crypt('club-mate');
 
+##############################
+#### BITTE GRUPPENSPEZIFISCH##
+#### AUSF†LLEN! ##############
+##############################
+
+$ScriptUrl = "http://www.orscholz.amnesty-intern.de"; # Die Internetadresse der Gruppe/des Bezirks
+
+$DefaultPasswords['admin'][] = crypt('mate-club'); # Passwort des Administrators
+$DefaultPasswords['edit'] = crypt('club-mate'); # Passwort zum Bearbeiten
+
+$AiGroupName='Gruppe Orscholz'; # Name der Gruppe
+$AiGroupNumber='5555'; # Nummer der Gruppe
+$AiContactMail='info@amnesty-orscholz.de'; # Kontakt-E-Mail-Adresse der Gruppe
+
+##############################
+#### INTERNA. BITTE NICHT ####
+#### VER€NDERN! ##############
+##############################
+
+$WikiTitle = "Amnesty International - $AiGroupName";
+$FmtPV['$Gruppenname'] = '$GLOBALS["AiGroupName"]';
+$FmtPV['$Gruppennummer'] = '$GLOBALS["AiGroupNumber"]';
+$FmtPV['$Kontaktmail'] = '$GLOBALS["AiContactMail"]';
 
 ##############################
 #### ZUSAETZLICHE RECIPES ####

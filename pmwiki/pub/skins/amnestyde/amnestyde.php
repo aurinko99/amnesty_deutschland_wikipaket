@@ -1,7 +1,7 @@
 <?php if (!defined('PmWiki')) exit();
 /*
  * PmWiki amnestyde skin
- * Version 1.0.4  (06.07.2009)
+ * Version 1.1  (05.09.2009)
  * @requires PmWiki 2.2
  *
  * Copyright (c) 2008 Amnesty International, Deutsche Sektion
@@ -26,12 +26,9 @@ SDV($LinkPageCreateFmt, "<a class='createlinktext' href='\$PageUrl?action=edit'>
 
 ##Gruppennummer und Gruppenname
 global $AiGroupNumber, $AiDonationPath, $AiSupporterPath, $AiMemberPath;
-$AiGroupName=PageVar('Site.Konfiguration','$:Gruppenname');
-$AiGroupNumber=PageVar('Site.Konfiguration','$:Gruppennummer');
 $AiDonationPath = "https://www.amnesty.de/spendentool/$AiGroupNumber";
 $AiSupporterPath = "https://www.amnesty.de/foerdererwerden/$AiGroupNumber";
 $AiMemberPath = "https://www.amnesty.de/mitgliedwerden/$AiGroupNumber";
-#$WikiTitle = "Amnesty International - $AiGroupName";
 $FmtPV['$AiDonationPath'] = '$GLOBALS["AiDonationPath"]';
 $FmtPV['$AiSupporterPath'] = '$GLOBALS["AiSupporterPath"]';
 $FmtPV['$AiMemberPath'] = '$GLOBALS["AiMemberPath"]';
