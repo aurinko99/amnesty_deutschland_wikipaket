@@ -15,7 +15,7 @@ global $AiGroupNumber;
 #### AUSF†LLEN! ##############
 ##############################
 
-$ScriptUrl = "http://www.orscholz.amnesty-intern.de"; # Die Internetadresse der Gruppe/des Bezirks
+$ScriptUrl = "http://www.amnesty-orscholz.de"; # Die Internetadresse der Gruppe/des Bezirks
 
 $DefaultPasswords['admin'][] = crypt('mate-club'); # Passwort des Administrators
 $DefaultPasswords['edit'] = crypt('club-mate'); # Passwort zum Bearbeiten
