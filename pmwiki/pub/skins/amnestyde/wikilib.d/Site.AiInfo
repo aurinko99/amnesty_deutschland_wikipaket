@@ -8,5 +8,5 @@ host=134.96.43.245
 name=Site.AiInfo
 rev=3
 targets=
-text={Site/Konfiguration$:Gruppenname}
+text={$Gruppenname}
 time=1215442734
