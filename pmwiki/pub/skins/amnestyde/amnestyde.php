@@ -10,7 +10,7 @@ global $FmtPV, $SkinName, $SkinVersionDate, $SkinVersionNum, $SkinVersion, $Skin
        $SkinSourceURL, $RecipeInfo;
 $SkinName = 'amnestyde';
 $SkinRecipeName = "AmnestyDe";
-$RecipeInfo['amnestyde']['Version'] = '2009-07-06 (1.04)';
+$RecipeInfo['amnestyde']['Version'] = '2009-09-15 (1.1)';
 
 ## Add a custom page storage location
 global $PageStorePath, $WikiLibDirs;
