@@ -8,5 +8,5 @@ host=93.222.249.191
 name=Site.Konfiguration
 rev=54
 targets=Site.Konfiguration
-text=!!Seiteneinstellungen%0a%0a!!!Einstellungen dieser Seite [--(müssen vom Administrator geändert werden.)--]%0a%0a''Gruppenname:'' {$Gruppenname}\\%0a''Gruppennummer:'' {$Gruppennummer}\\%0a''Kontakt-E-Mail:'' {$Kontaktmail}%0a%0a!!Softwareaktualisierung%0a[[Site.Konfiguration?action=recipecheck|Softwareversionen &uuml;berpr&uuml;fen]]
+text=!!Seiteneinstellungen%0a%0a!!!Einstellungen dieser Seite [--(m√ºssen vom Administrator ge√§ndert werden.)--]%0a%0a''Gruppenname:'' {$Gruppenname}\\%0a''Gruppennummer:'' {$Gruppennummer}\\%0a''Kontakt-E-Mail:'' {$Kontaktmail}%0a%0a!!Softwareaktualisierung%0a[[Site.Konfiguration?action=recipecheck|Softwareversionen &uuml;berpr&uuml;fen]]
 time=1252134309
