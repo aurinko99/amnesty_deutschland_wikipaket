@@ -26,7 +26,7 @@
 +----------------------------------------------------------------------+
 */
 
-$RecipeInfo['Fox']['Version'] = '2009-05-15';
+$RecipeInfo['Fox']['Version'] = '2010-02-07';
 
 $FmtPV['$FoxVersion'] = "'{$RecipeInfo["Fox"]["Version"]}'";
 
@@ -54,6 +54,7 @@ SDV($FoxClearPTVFmt, 'NULL'); //string used as input to clear a PTV.
 SDV($EnableFoxPTVDelete, false); //set to true to allow PTVs to be deleted by changing value for a PTV to $FoxPTVDeleteKey
 SDV($FoxPTVDeleteKey, 'ERASEPTV'); //string to use for ersaing (deleting) PTVs, if $EnableFoxPTVDelete = true;
 SDV($FoxCheckErrorMsg, '$[Please enter valid input!]');
+SDV($FoxEnablePTVRefresh, 1); //unsets page cache for PTVs, so PTVs will refresh without need for full page refresh 
 
 # Default posting permission patterns for allowed and prohibited pages to post to
 # (use of wildcards * and $ is possible, use of - at start will prohibit posting to that page)
@@ -289,7 +290,7 @@ $HandleActions['foxpost'] = 'FoxHandlePost';
 ## Main function called with action=foxpost
 function FoxHandlePost($pagename, $auth) {
    global $InputValues, $EnableFoxUrlInput, $EnableFoxDefaultMsg, $EnablePostDirectives,
-   		$IsPagePosted, $FoxDebug, $FmtV;
+   		$IsPagePosted, $FoxDebug, $FmtV, $FoxMsgFmt;
 	FoxTimer($pagename, 'FoxHandlePost: begin');
 
    //get arguments from POST and GET
@@ -619,7 +620,8 @@ function FoxGroupName($pagename, $fx, $name) {
 function FoxUpdatePages($pagename, $fx, $tar) { 
 	global $FoxDebug; if($FoxDebug) echo " UPDATEPAGES> "; //DEBUG//
 	global $FoxAuth, $EnableBlocklist, $FoxMsgFmt, $EnableFoxDefaultMsg, $ScriptUrl, $FmtV, 
-			$IsPagePosted, $Now, $ChangeSummary, $EditFunctions, $EnablePost, $FoxDisplayFmt, $InputValues;
+			$IsPagePosted, $Now, $ChangeSummary, $EditFunctions, $FoxExcludeEditFunctions, 
+			$EnablePost, $FoxDisplayFmt, $InputValues;
 	if(!isset($tar[0])) FoxAbort($pagename, "$[Error: no target specified!]");
 
 	//process each target page in turn. $targ is passed on to other functions called
@@ -721,10 +723,11 @@ function FoxUpdatePages($pagename, $fx, $tar) {
 		//update any PTVs
 		if(isset($targ['ptvtarget']))
 			$newtext = FoxPTVAddUpdate($pagename, $newtext, $fx, $targ );
-			
+		
+		$newtext = trim($newtext);	
 		//if we got changes update page
 		if($newtext!=$text) {
-			$text = trim($newtext);
+			$text = $newtext;
 			//recombine pagetext sections
 			if (!$toptxt=='') $text = trim($toptxt)."\n".$text;
 			if (!$bottxt=='') $text .= "\n".trim($bottxt);
@@ -734,22 +737,25 @@ function FoxUpdatePages($pagename, $fx, $tar) {
 			//reduce $EditFunctions
 			if ($act == 'copy')
 				$EditFunctions = array('SaveAttributes','PostPage','PostRecentChanges');
-			else 
-				unset($EditFunctions['EditTemplate'], $EditFunctions['RestorePage'],
-						$EditFunctions['AutoCreateTargets'], $EditFunctions['PreviewPage']); 
-
+			else {
+				SDVA($FoxExcludeEditFunctions, array('MergeSimulEdits','EditTemplate','RestorePage',
+						'AutoCreateTargets','PreviewPage','RequireAuthor'));
+				foreach($EditFunctions as $k => $fn)
+					if (in_array($fn, $FoxExcludeEditFunctions)) unset($EditFunctions[$k]);	
+			}		
 			//abort process if $FoxProcessTimeMax is exceeded, to avoid php fatal error on timeout.
 			FoxTimer($pagename, "FoxUpdatePages: $tgtname");
 			$IsPagePosted = 0;
 			$new['csum'] = $ChangeSummary;
   			if ($ChangeSummary) $new["csum:$Now"] = $ChangeSummary;
-  			
+  		
 			if (@$fx['foxnosave']!=1)
 			$IsPagePosted = UpdatePage($tgtname, $page, $new, $EditFunctions);
 		}
 		Lock(0);
 		if ($IsPagePosted==1) {
-			$_SESSION['foxedit'][$pagename] = array(); //clear up SESSION var; only use if Redirect is used
+			#session_start();
+			#unset($_SESSION['foxedit'][$pagename]); //clear up SESSION var; only use if Redirect is used
 			$counter++;
 			if (isset($targ['foxsuccess'])) $FoxMsgFmt[] = $targ['foxsuccess'];
 			elseif (isset($fx['foxsuccess'])) $FoxMsgFmt[] = $fx['foxsuccess'];
@@ -1343,19 +1349,20 @@ function FoxPTVAddUpdate($pagename, $text, $fx, $targ ) {
 		foreach($PageTextVarPatterns as $pat) {
 			if (!preg_match_all($pat, $text, $match, PREG_SET_ORDER)) continue;
 			foreach($match as $m) {   //$m[0]=all, $m[1]=beforevalue, $m[2]=name, $m[3]=value, $m[4]=aftervalue			
-				$ptvs[] = $var = $m[2];
-				if (!array_key_exists($var, $update)) continue;
-				if (isset($update[$var])) $val = $update[$var]; //new value
+				$ptvs[] = $key = $m[2];
+				if (!array_key_exists($key, $update)) continue;
+				if (isset($update[$key])) $val = $update[$key]; //new value
 				else $val = '';
+				if (PageTextVar($targ['target'], $key) == $val) continue;
 				if ($val=='') { //empty input gets ignored, unless ptvclear is set to 1 or to ptv field names
-					if (!($ptvclear[0]==1 || in_array($var, $ptvclear))) continue;
+					if (!($ptvclear[0]==1 || in_array($key, $ptvclear))) continue;
 				}
 				if ($val==$FoxClearPTVFmt) $val = '';  // 'NULL' or other special string clears ptv
 				if (is_array($val)) $val = implode(",", $val);   //array input gets converted to csv
 				//prevent posting of directives & markup expressions
 				if($EnablePostDirectives==false)
 			 		$val = FoxDefuseItem($val);
-				if($FoxDebug>5) echo "<pre> ".$var."=".$val."</pre>"; //new ptv name=value
+				#if($FoxDebug>5) echo "<pre> ".$key."=>".$val."</pre>"; //new ptv name=value
 				if (!preg_match('/s[eimu]*$/', $pat))  //for any inline pattern replace newlines with spaces
 					$val = str_replace("\n", ' ', $val);
 				if (strstr($m[4],'[[#')) { 
@@ -1366,8 +1373,11 @@ function FoxPTVAddUpdate($pagename, $text, $fx, $targ ) {
 				if ($EnableFoxPTVDelete==1 && $val==$FoxPTVDeleteKey) 
 					$text = str_replace($m[0], '', $text);
 				else $text = str_replace($m[0], $m[1].$val.$m[4], $text);
+				//update ptv in $PCache
+				$GLOBALS['PCache'][$targ['target']]['=p_'.$key] = $val; 
 			}
 		}
+			
 		//add any new ptvs named in ptvfields and do not exist in page ptvtarget
 		if ($fields) {
 			$ptvfmt = isset($targ['ptvfmt']) ? $targ['ptvfmt'] : 'hidden';
@@ -1389,6 +1399,8 @@ function FoxPTVAddUpdate($pagename, $text, $fx, $targ ) {
 						$text = $text."\n(:$key: $val:)\n"; break; 
 					default : $FoxMsgFmt[] = "$[Error: cannot recognise PTV format] $ptvfmt";
 				}
+				//add ptv to $PCache
+				$GLOBALS['PCache'][$targ['target']]['=p_'.$key] = $val;
 			}
 		}
 	return $text;
@@ -1600,12 +1612,12 @@ function FoxFinish($pagename, $fx, $msg) {
 		if ($fx['keepinput']!=1)  {
 			foreach($InputValues as $i => $v) {
 				if (in_array($i, $keep)) continue;
-				unset($InputValues[$i]);
+				unset($GLOBALS['InputValues'][$i]);
 			}
 		}
 	} else //wipe all
 		foreach($InputValues as $i => $v)
-			unset($InputValues[$i]);
+			unset($GLOBALS['InputValues'][$i]);
 	HandleDispatch($pagename,'browse',$msg);
 	exit;
 } //}}}

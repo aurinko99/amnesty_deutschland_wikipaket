@@ -7,7 +7,7 @@
    by the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
 
-	(plist ) markup expression returns a comma separated list of full pagenames
+	{(plist )} markup expression returns a comma separated list of full pagenames
 	from pagenames including wildcards.
 	syntax {(plist PageName1 PageName2 ... -PageName3 ....)}
 	PageName - source pages from PageName or Group. 
@@ -24,9 +24,9 @@
 	pre=PREFIX - PREFIX string is put in front of every name.
 	suf=SUFFIX - SUFFIX string is put behind every name.
 	
-	(pagelist ) markup expression returns a comma separated list of full pagenames
+	{(pagelist )} markup expression returns a comma separated list of full pagenames
 	and accepts all parameters of the (:pagelist :) directive.
-	The difference to (:pagelist :) is: the default fmt is a comma-separated list (fmt=csv), not a HTML list.
+	Default output format is a comma-separated list (fmt=csv), not a HTML list of links. Other formats can be given via a fmt= parameter 
 	
 	{(rename PAGELIST group=GROUP pre=PREFIX suf=SUFFIX)} with input from plist or pagelist returns new pagelist
 	with new Group.PageNames GROUP.PREFIX.PageName.SUFFIX if parameters are specified. Use for page backup forms.
@@ -46,18 +46,23 @@
 	
 	{(newticket Group)} returns auto increasing pagename of format Group.20071220001 (today date and 3 digit number)
 
+	{(sumdata PAGE|PAGELIST data=PTVLIST)} returns sum of PTVs listed from pages in PAGELIST
+
 	{(allptvs PAGE|PAGELIST)} show all PTVs as name: value; input argument: PageName or csv list of pagenames for instance with (plist)
 
 	{(random LIST)} returns item selected at random from csv list provided. Doubles are prevented. 
 					sep= to specify custom listitem separator
 
 */
-$RecipeInfo['PowerTools']['Version'] = '2008-07-31';
 
+$RecipeInfo['PowerTools']['Version'] = '2009-09-03';
+
+
+## (plist ...)
 $MarkupExpr['plist'] = 'MxMakePList($pagename, @$args, @$argp)';
-	
 function MxMakePList($pagename, $args, $opt='') {	
 	if ($args[0]=='' && $opt=='') return $pagename;
+	StopWatch('plist start');
 	$grp = PageVar($pagename, '$Group');
 	$exlist =	array();
 	$inlist = array();
@@ -129,18 +134,21 @@ function MxMakePList($pagename, $args, $opt='') {
 	
 	foreach ($plist as $i => $p)
 		$plist[$i] = @$opt['pre'].$p.@$opt['suf'];
+	StopWatch('plist end');
 	return implode($sep, $plist);
 }
 
 
+## (pagelist ......) [all pagelist parameters allowed]
 $MarkupExpr['pagelist'] = 'MxPageList($pagename, $params)'; 
 function MxPageList($pagename, $args) {
+	StopWatch('pagelist start');
 	$opt = array('o' => $args, 'fmt' => 'csv');
-	$out = FmtPageList('$MatchList', $pagename, $opt, 0);
+	$out = FmtPageList('$MatchList', $pagename, $opt, 0); 
 	$out = preg_replace("/[\n]+/s","\n",$out);
+	StopWatch('pagelist end');
 	return $out;
 }
-
 $FPLFormatOpt['csv'] = array('fn' =>  'FPLSimpleText');
 function FPLSimpleText($pagename, &$matches, $opt) {
 	$matches = MakePageList($pagename, $opt, 0);
@@ -159,7 +167,7 @@ function FPLSimpleText($pagename, &$matches, $opt) {
 }
 
 
-## (rename plist() [group=NEWGROUP] [pre=NAMEPREFIX] [suf=NAMESUFFIX]) 
+## (rename (plist ...) [group=NEWGROUP] [pre=NAMEPREFIX] [suf=NAMESUFFIX]) 
 $MarkupExpr['rename'] = 'MxPageRename($pagename, $args[0], @$argp)';
 function MxPageRename($pagename, $plist, $opt='') {
 	$plist = explode(",", $plist);
@@ -184,7 +192,7 @@ function MxPageRename($pagename, $plist, $opt='') {
 	return implode(",", $newplist);
 }
 
-## (pagecount plist())
+## (pagecount (plist ...))
 $MarkupExpr['pagecount'] = 'PageCount($pagename, @$args[0])';
 function PageCount($pn, $arg='') {
 	if ($arg=='') return 0;
@@ -192,7 +200,7 @@ function PageCount($pn, $arg='') {
 }
 
 
-## (wordcount PageName), (wordcount plist()) (wordcount 'string') (wordcount)
+## (wordcount PageName), (wordcount (plist ...)) (wordcount 'string') (wordcount)
 $MarkupExpr['wordcount'] = 'WordCount($pagename, @$args[0])';
 function WordCount($pn, $arg='') {
 	//wordcount current page 	
@@ -345,6 +353,25 @@ function MakeNewTicket($pagename, $grp) {
    else $target = $grp.".".$today."001";
    return $target;    
 } 
+
+# {(sumdata PAGELIST data=PTVLIST)} 
+# returns sum of PTVs listed from pages in PAGELIST 
+# example: {(sumdata (plist Test.*) data=PTV1,PTV2 )}
+$MarkupExpr['sumdata'] = 'MXSumDataPTVs($pagename, $args[0], $argp)';
+function MXSumDataPTVs($pagename, $list, $args) {
+	$sum = '';
+	if(!isset($args['data'])) return 'no data PTVs selected';
+	$ptvs =  explode(',',$args['data']);
+	$plist = (isset($list)) ? explode(',',$list) : array($pagename);
+	foreach($plist as $pn) {
+		$pn = MakePageName($pagename, $pn);
+   	foreach ($ptvs as $d) {
+   		$v = PageTextVar($pn, $d);
+   		$sum += floatval($v);
+  	}
+	}
+	return $sum;
+}
 
 # show all ptvs as name: value; input argument: PageName or list of page names
 $MarkupExpr['allptvs'] = 'MXDisplayAllPTVs($pagename, $args[0])';

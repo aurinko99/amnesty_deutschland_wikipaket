@@ -26,7 +26,7 @@
     Replacements can also be done with Input forms, using action ptvreplace.
     See Cookbook:PTVReplace for details.
 */
-$RecipeInfo['PTVReplace'] = '2007-04-26';
+$RecipeInfo['PTVReplace']['Version'] = '2007-04-26';
 
 SDV($EnablePTVReplaceTarget, 1);
 SDV($PTVRedirect, 0);
