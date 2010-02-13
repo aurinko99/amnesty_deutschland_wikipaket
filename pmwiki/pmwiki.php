@@ -1,7 +1,7 @@
 <?php
 /*
     PmWiki
-    Copyright 2001-2009 Patrick R. Michaud
+    Copyright 2001-2010 Patrick R. Michaud
     pmichaud@pobox.com
     http://www.pmichaud.com/
 
@@ -220,7 +220,7 @@ $Conditions['name'] =
   "(boolean)MatchPageNames(\$pagename, FixGlob(\$condparm, '$1*.$2'))";
 $Conditions['match'] = 'preg_match("!$condparm!",$pagename)';
 $Conditions['authid'] = 'NoCache(@$GLOBALS["AuthId"] > "")';
-$Conditions['exists'] = 'PageExists(MakePageName(\$pagename, \$condparm))';
+$Conditions['exists'] = 'PageExists(MakePageName($pagename, $condparm))';
 $Conditions['equal'] = 'CompareArgs($condparm) == 0';
 function CompareArgs($arg) 
   { $arg = ParseArgs($arg); return strcmp(@$arg[''][0], @$arg[''][1]); }
@@ -310,6 +310,9 @@ if (preg_match('/[\\x80-\\xbf]/',$pagename))
 $pagename = preg_replace('![^[:alnum:]\\x80-\\xff]+$!','',$pagename);
 $FmtPV['$RequestedPage'] = "'".htmlspecialchars($pagename, ENT_QUOTES)."'";
 $Cursor['*'] = &$pagename;
+if (function_exists("date_default_timezone_get") ) { # fix PHP5.3 warnings
+  @date_default_timezone_set(@date_default_timezone_get());
+}
 
 if (file_exists("$FarmD/local/farmconfig.php")) 
   include_once("$FarmD/local/farmconfig.php");
@@ -468,12 +471,12 @@ function DRange($when) {
     /x';
   if (preg_match($dpat, $when, $m)) {
     $n = $m;
+    ##  if no time given, assume range of 1 day (except when full month)
+    if (@$m[4]>'' && @$m[5] == '') { @$n[4]++; }
     ##  if no day given, assume 1st of month and full month range
     if (@$m[4] == '') { $m[4] = 1; $n[4] = 1; $n[3]++; }
-    ##  if no time given, assume range of 1 day
-    if (@$m[5] == '') { @$n[4]++; }
-    ##  if no seconds given, assume range of 1 minute
-    if (@$m[8] == '') { @$n[7]++; }
+    ##  if no seconds given, assume range of 1 minute (except when full day)
+    if (@$m[7]>'' && @$m[8] == '') { @$n[7]++; }
     $t0 = @mktime($m[5], $m[7], $m[8], $m[3], $m[4], $m[1]);
     $t1 = @mktime($n[5], $n[7], $n[8], $n[3], $n[4], $n[1]);
     return array($t0, $t1);
@@ -573,8 +576,8 @@ function fixperms($fname, $add = 0) {
 ## are treated as things to be excluded.
 function GlobToPCRE($pat) {
   $pat = preg_quote($pat, '/');
-  $pat = str_replace(array('\\*', '\\?', '\\[', '\\]', '\\^'),
-                     array('.*',  '.',   '[',   ']',   '^'), $pat);
+  $pat = str_replace(array('\\*', '\\?', '\\[', '\\]', '\\^', '\\-', '\\!'),
+                     array('.*',  '.',   '[',   ']',   '^', '-', '!'), $pat);
   $excl = array(); $incl = array();
   foreach(preg_split('/,+\s?/', $pat, -1, PREG_SPLIT_NO_EMPTY) as $p) {
     if ($p{0} == '-' || $p{0} == '!') $excl[] = '^'.substr($p, 1).'$';
@@ -594,6 +597,8 @@ function FixGlob($x, $rep = '$1*.$2') {
 ## regexes to include ('/'), regexes to exclude ('!'), or
 ## wildcard patterns (all others).
 function MatchPageNames($pagelist, $pat) {
+  global $Charset;
+  $pcre8 = ($Charset == 'UTF-8')? 'u' : ''; # allow range matches in utf8
   $pagelist = (array)$pagelist;
   foreach((array)$pat as $p) {
     if (count($pagelist) < 1) break;
@@ -608,9 +613,9 @@ function MatchPageNames($pagelist, $pat) {
       default:
         list($inclp, $exclp) = GlobToPCRE(str_replace('/', '.', $p));
         if ($exclp) 
-          $pagelist = array_diff($pagelist, preg_grep("/$exclp/i", $pagelist));
+          $pagelist = array_diff($pagelist, preg_grep("/$exclp/i$pcre8", $pagelist));
         if ($inclp)
-          $pagelist = preg_grep("/$inclp/i", $pagelist);
+          $pagelist = preg_grep("/$inclp/i$pcre8", $pagelist);
     }
   }
   return $pagelist;
@@ -705,8 +710,9 @@ function PCache($pagename, $page) {
 ## SetProperty saves a page property into $PCache.  For convenience
 ## it returns the $value of the property just set.  If $sep is supplied,
 ## then $value is appended to the current property (with $sep as
-## as separator) instead of replacing it.
-function SetProperty($pagename, $prop, $value, $sep = NULL) {
+## as separator) instead of replacing it. If $keep is suplied and the 
+## property already exists, then $value will be ignored.
+function SetProperty($pagename, $prop, $value, $sep=NULL, $keep=NULL) {
   global $PCache, $KeepToken;
   NoCache();
   $prop = "=p_$prop";
@@ -714,8 +720,9 @@ function SetProperty($pagename, $prop, $value, $sep = NULL) {
                         "\$GLOBALS['KPV']['$1']", $value);
   if (!is_null($sep) && isset($PCache[$pagename][$prop]))
     $value = $PCache[$pagename][$prop] . $sep . $value;
-  $PCache[$pagename][$prop] = $value;
-  return $value;
+  if (is_null($keep) || !isset($PCache[$pagename][$prop]))
+    $PCache[$pagename][$prop] = $value;
+  return $PCache[$pagename][$prop];
 }
 
 
@@ -733,7 +740,8 @@ function PageTextVar($pagename, $var) {
     $page = RetrieveAuthPage($pagename, 'read', false, READPAGE_CURRENT);
     if ($page) {
       foreach((array)$PageTextVarPatterns as $pat) 
-        if (preg_match_all($pat, @$page['text'], $match, PREG_SET_ORDER))
+        if (preg_match_all($pat, IsEnabled($PCache[$pagename]['=preview'],@$page['text']), 
+          $match, PREG_SET_ORDER))
           foreach($match as $m) {
             $t = preg_replace("/\\{\\$:{$m[2]}\\}/", '', $m[3]);
             $pc["=p_{$m[2]}"] = Qualify($pagename, $t);
@@ -1205,7 +1213,7 @@ function TextSection($text, $sections, $args = NULL) {
 ##  The selected page is placed in the global $RASPageName variable.
 ##  The caller is responsible for calling Qualify() as needed.
 function RetrieveAuthSection($pagename, $pagesection, $list=NULL, $auth='read') {
-  global $RASPageName;
+  global $RASPageName, $PCache;
   if ($pagesection{0} != '#')
     $list = array(MakePageName($pagename, $pagesection));
   else if (is_null($list)) $list = array($pagename);
@@ -1214,7 +1222,7 @@ function RetrieveAuthSection($pagename, $pagesection, $list=NULL, $auth='read') 
     if (!PageExists($t)) continue;
     $tpage = RetrieveAuthPage($t, $auth, false, READPAGE_CURRENT);
     if (!$tpage) continue;
-    $text = TextSection($tpage['text'], $pagesection);
+    $text = TextSection(IsEnabled($PCache[$t]['=preview'],$tpage['text']),$pagesection);
     if ($text !== false) { $RASPageName = $t; return $text; }
   }
   $RASPageName = '';
@@ -1222,7 +1230,7 @@ function RetrieveAuthSection($pagename, $pagesection, $list=NULL, $auth='read') 
 }
 
 function IncludeText($pagename, $inclspec) {
-  global $MaxIncludes, $IncludeOpt, $InclCount;
+  global $MaxIncludes, $IncludeOpt, $InclCount, $PCache;
   SDV($MaxIncludes,50);
   SDVA($IncludeOpt, array('self'=>1));
   $npat = '[[:alpha:]][-\\w]*';
@@ -1236,7 +1244,7 @@ function IncludeText($pagename, $inclspec) {
         $iname = MakePageName($pagename, $v);
         if (!$args['self'] && $iname == $pagename) continue;
         $ipage = RetrieveAuthPage($iname, 'read', false, READPAGE_CURRENT);
-        $itext = @$ipage['text'];
+        $itext = IsEnabled($PCache[$iname]['=preview'], @$ipage['text']);
       }
       $itext = TextSection($itext, $v, array('anchors' => 1));
       continue;
@@ -1444,8 +1452,8 @@ function MakeLink($pagename,$tgt,$txt=NULL,$suffix=NULL,$fmt=NULL) {
 }
 
 function Markup($id, $when, $pat=NULL, $rep=NULL) {
-  global $MarkupTable,$MarkupRules;
-  unset($MarkupRules);
+  global $MarkupTable;
+  unset($GLOBALS['MarkupRules']);
   if (preg_match('/^([<>])?(.+)$/', $when, $m)) {
     $MarkupTable[$id]['cmd'] = $when;
     $MarkupTable[$m[2]]['dep'][$id] = $m[1];
@@ -1454,7 +1462,7 @@ function Markup($id, $when, $pat=NULL, $rep=NULL) {
       $MarkupTable[$id]['seq'] = $MarkupTable[$m[2]]['seq'].$m[1];
       foreach((array)@$MarkupTable[$id]['dep'] as $i=>$m)
         Markup($i,"$m$id");
-      unset($MarkupTable[$id]['dep']);
+      unset($GLOBALS['MarkupTable'][$id]['dep']);
     }
   }
   if ($pat && !isset($MarkupTable[$id]['pat'])) {
@@ -1466,7 +1474,7 @@ function Markup($id, $when, $pat=NULL, $rep=NULL) {
 function DisableMarkup() {
   global $MarkupTable;
   $idlist = func_get_args();
-  unset($MarkupRules);
+  unset($GLOBALS['MarkupRules']);
   while (count($idlist)>0) {
     $id = array_shift($idlist);
     if (is_array($id)) { $idlist = array_merge($idlist, $id); continue; }
@@ -1495,7 +1503,6 @@ function MarkupToHTML($pagename, $text, $opt = NULL) {
   StopWatch('MarkupToHTML begin');
   array_unshift($MarkupFrame, array_merge($MarkupFrameBase, (array)$opt));
   $MarkupFrame[0]['wwcount'] = $WikiWordCount;
-  $markrules = BuildMarkupRules();
   foreach((array)$text as $l) 
     $lines[] = $MarkupFrame[0]['escape'] ? PVSE($l) : $l;
   $lines[] = '(:closeall:)';
@@ -1503,6 +1510,7 @@ function MarkupToHTML($pagename, $text, $opt = NULL) {
   while (count($lines)>0) {
     $x = array_shift($lines);
     $RedoMarkupLine=0;
+    $markrules = BuildMarkupRules();
     foreach($markrules as $p=>$r) {
       if ($p{0} == '/') $x=preg_replace($p,$r,$x); 
       elseif (strstr($x,$p)!==false) $x=eval($r);
@@ -1636,6 +1644,8 @@ function RestorePage($pagename,&$page,&$new,$restore=NULL) {
   }
   if ($nl) $t[]='';
   $new['text']=implode("\n",$t);
+  $new['=preview'] = $new['text'];
+  PCache($pagename, $new);
   return $new['text'];
 }
 
@@ -1647,9 +1657,12 @@ function ReplaceOnSave($pagename,&$page,&$new) {
   global $EnablePost, $ROSPatterns, $ROEPatterns;
   foreach ((array)@$ROEPatterns as $pat => $rep)
     $new['text'] = preg_replace($pat, $rep, $new['text']);
-  if (!$EnablePost) return;
-  foreach((array)@$ROSPatterns as $pat=>$rep) 
-    $new['text'] = preg_replace($pat, $rep, $new['text']);
+  if ($EnablePost) {
+    foreach((array)@$ROSPatterns as $pat=>$rep) 
+      $new['text'] = preg_replace($pat, $rep, $new['text']);
+  }
+  $new['=preview'] = $new['text'];
+  PCache($pagename, $new);
 }
 
 function SaveAttributes($pagename,&$page,&$new) {
@@ -1671,7 +1684,7 @@ function SaveAttributes($pagename,&$page,&$new) {
 
 function PostPage($pagename, &$page, &$new) {
   global $DiffKeepDays, $DiffFunction, $DeleteKeyPattern, $EnablePost,
-    $Now, $Charset, $Author, $WikiDir, $IsPagePosted;
+    $Now, $Charset, $Author, $WikiDir, $IsPagePosted, $DiffKeepNum;
   SDV($DiffKeepDays,3650);
   SDV($DeleteKeyPattern,"^\\s*delete\\s*$");
   $IsPagePosted = false;
@@ -1685,9 +1698,11 @@ function PostPage($pagename, &$page, &$new) {
       $new["diff:$Now:{$page['time']}:$diffclass"] =
         $DiffFunction($new['text'],@$page['text']);
     $keepgmt = $Now-$DiffKeepDays * 86400;
+    $keepnum = IsEnabled($DiffKeepNum, 20);
     $keys = array_keys($new);
     foreach($keys as $k)
-      if (preg_match("/^\\w+:(\\d+)/",$k,$match) && $match[1]<$keepgmt)
+      if (preg_match("/^\\w+:(\\d+)/",$k,$match) 
+        && --$keepnum<0 && $match[1]<$keepgmt)
         unset($new[$k]);
     if (preg_match("/$DeleteKeyPattern/",$new['text'])){
       if(@$new['passwdattr']>'' && !CondAuth($pagename, 'attr'))
@@ -1699,10 +1714,11 @@ function PostPage($pagename, &$page, &$new) {
   }
 }
 
-function PostRecentChanges($pagename,&$page,&$new) {
+function PostRecentChanges($pagename,$page,$new,$Fmt=null) {
   global $IsPagePosted, $RecentChangesFmt, $RCDelimPattern, $RCLinesMax;
-  if (!$IsPagePosted) return;
-  foreach($RecentChangesFmt as $rcfmt=>$pgfmt) {
+  if (!$IsPagePosted && $Fmt==null) return;
+  if ($Fmt==null) $Fmt = $RecentChangesFmt;
+  foreach($Fmt as $rcfmt=>$pgfmt) {
     $rcname = FmtPageName($rcfmt,$pagename);  if (!$rcname) continue;
     $pgtext = FmtPageName($pgfmt,$pagename);  if (!$pgtext) continue;
     if (@$seen[$rcname]++) continue;
@@ -1753,13 +1769,14 @@ function HandleEdit($pagename, $auth = 'edit') {
   Lock(2);
   $page = RetrieveAuthPage($pagename, $auth, true);
   if (!$page) Abort("?cannot edit $pagename"); 
-  PCache($pagename,$page);
   $new = $page;
   foreach((array)$EditFields as $k) 
     if (isset($_POST[$k])) $new[$k]=str_replace("\r",'',stripmagic($_POST[$k]));
   $new['csum'] = $ChangeSummary;
   if ($ChangeSummary) $new["csum:$Now"] = $ChangeSummary;
   $EnablePost &= preg_grep('/^post/', array_keys(@$_POST));
+  $new['=preview'] = $new['text'];
+  PCache($pagename, $new);
   UpdatePage($pagename, $page, $new);
   Lock(0);
   if ($IsPagePosted && !@$_POST['postedit']) 
@@ -1926,7 +1943,8 @@ function SessionAuth($pagename, $auth = NULL) {
   static $called;
 
   @$called++;
-  if (!$auth && ($called > 1 || !@$_REQUEST[session_name()])) return;
+  $sn = session_name(); # in PHP5.3, $_REQUEST doesn't contain $_COOKIE
+  if (!$auth && ($called > 1 || (!@$_REQUEST[$sn] && !@$_COOKIE[$sn]))) return;
 
   $sid = session_id();
   @session_start();
@@ -1957,7 +1975,7 @@ function PasswdVar($pagename, $level) {
     if ($page) PCache($pagename, $page);
   }
   SDV($PasswdVarAuth, 'attr');
-  if ($PasswdVarAuth && !@$page['=auth'][$PasswdVarAuth]) return '(protected)';
+  if ($PasswdVarAuth && !@$page['=auth'][$PasswdVarAuth]) return XL('(protected)');
   $pwsource = $page['=pwsource'][$level];
   if (strncmp($pwsource, 'cascade:', 8) == 0) {
     $FmtV['$PWCascade'] = substr($pwsource, 8);

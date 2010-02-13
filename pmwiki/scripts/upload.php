@@ -113,12 +113,15 @@ SDV($HandleAuth['postupload'], $HandleAuth['upload']);
 SDV($UploadVerifyFunction, 'UploadVerifyBasic');
 
 function MakeUploadName($pagename,$x) {
-  global $UploadNameChars;
+  global $UploadNameChars, $MakeUploadNamePatterns;
   SDV($UploadNameChars, "-\\w. ");
-  $x = preg_replace("/[^$UploadNameChars]/", '', $x);
-  $x = preg_replace('/\\.[^.]*$/e', "strtolower('$0')", $x);
-  $x = preg_replace('/^[^[:alnum:]_]+/', '', $x);
-  return preg_replace('/[^[:alnum:]_]+$/', '', $x);
+  SDV($MakeUploadNamePatterns, array(
+    "/[^$UploadNameChars]/" => '',
+    '/\\.[^.]*$/e' => 'strtolower("$0")',
+    '/^[^[:alnum:]_]+/' => '',
+    '/[^[:alnum:]_]+$/' => ''));
+   return preg_replace(array_keys($MakeUploadNamePatterns),
+            array_values($MakeUploadNamePatterns), $x);
 }
 
 function LinkUpload($pagename, $imap, $path, $alt, $txt, $fmt=NULL) {
@@ -185,7 +188,7 @@ function HandleDownload($pagename, $auth = 'read') {
   if ($UploadExts[@$match[1]]) 
     header("Content-Type: {$UploadExts[@$match[1]]}");
   header("Content-Length: ".filesize($filepath));
-  header("Content-disposition: $DownloadDisposition; filename=$upname");
+  header("Content-disposition: $DownloadDisposition; filename=\"$upname\"");
   $fp = fopen($filepath, "r");
   if ($fp) {
     while (!feof($fp)) echo fread($fp, 4096);
@@ -196,7 +199,7 @@ function HandleDownload($pagename, $auth = 'read') {
 
 function HandlePostUpload($pagename, $auth = 'upload') {
   global $UploadVerifyFunction, $UploadFileFmt, $LastModFile, 
-    $EnableUploadVersions, $Now;
+    $EnableUploadVersions, $Now, $RecentUploadsFmt, $FmtV;
   UploadAuth($pagename, $auth);
   $uploadfile = $_FILES['uploadfile'];
   $upname = $_REQUEST['upname'];
@@ -216,6 +219,11 @@ function HandlePostUpload($pagename, $auth = 'upload') {
     fixperms($filepath,0444);
     if ($LastModFile) { touch($LastModFile); fixperms($LastModFile); }
     $result = "upresult=success";
+    if (IsEnabled($RecentUploadsFmt, 0)) {
+      $FmtV['$upname'] = $upname;
+      $FmtV['$upsize'] = $uploadfile['size'];
+      PostRecentChanges($pagename, '', '', $RecentUploadsFmt);
+    }
   }
   Redirect($pagename,"{\$PageUrl}?action=upload&uprname=$upname&$result");
 }

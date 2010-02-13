@@ -77,7 +77,7 @@ SDV($InputFocusFmt,
 ##  InputToHTML performs standard processing on (:input ...:) arguments,
 ##  and returns the formatted HTML string.
 function InputToHTML($pagename, $type, $args, &$opt) {
-  global $InputTags, $InputAttrs, $InputValues, $FmtV,
+  global $InputTags, $InputAttrs, $InputValues, $FmtV, $KeepToken,
     $InputFocusLevel, $InputFocusId, $InputFocusFmt, $HTMLFooterFmt;
   if (!@$InputTags[$type]) return "(:input $type $args:)";
   ##  get input arguments
@@ -137,6 +137,8 @@ function InputToHTML($pagename, $type, $args, &$opt) {
   $attr = array();
   foreach ($attrlist as $a) {
     if (!isset($opt[$a]) || $opt[$a]===false) continue;
+    if(strpos($opt[$a], $KeepToken)!== false) # multiline textarea/hidden fields
+      $opt[$a] = Keep(str_replace("'", '&#39;', MarkupRestore($opt[$a]) ));
     $attr[] = "$a='".str_replace("'", '&#39;', $opt[$a])."'";
   }
   $FmtV['$InputFormArgs'] = implode(' ', $attr);
@@ -157,7 +159,7 @@ function InputMarkup($pagename, $type, $args) {
 
 ##  (:input default:) directive.
 function InputDefault($pagename, $type, $args) {
-  global $InputValues, $PageTextVarPatterns;
+  global $InputValues, $PageTextVarPatterns, $PCache;
   $args = ParseArgs($args);
   $args[''] = (array)@$args[''];
   $name = (isset($args['name'])) ? $args['name'] : array_shift($args['']);
@@ -176,7 +178,8 @@ function InputDefault($pagename, $type, $args) {
     $page = RetrieveAuthPage($source, 'read', false, READPAGE_CURRENT);
     if ($page) {
       foreach((array)$PageTextVarPatterns as $pat)
-        if (preg_match_all($pat, $page['text'], $match, PREG_SET_ORDER))
+        if (preg_match_all($pat, IsEnabled($PCache[$source]['=preview'], $page['text']), 
+          $match, PREG_SET_ORDER))
           foreach($match as $m)
             if (!isset($InputValues['ptv_'.$m[2]]))
               $InputValues['ptv_'.$m[2]] = 

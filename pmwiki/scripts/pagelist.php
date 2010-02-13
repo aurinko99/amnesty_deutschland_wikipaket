@@ -196,6 +196,7 @@ function MakePageList($pagename, $opt, $retpages = 1) {
   asort($PageListFilters);
   $opt['=phase'] = PAGELIST_PRE; $list=array(); $pn=NULL; $page=NULL;
   foreach($PageListFilters as $fn => $v) {
+    if ($v<0) continue;
     $ret = $fn($list, $opt, $pagename, $page);
     if ($ret & PAGELIST_ITEM) $itemfilters[] = $fn;
     if ($ret & PAGELIST_POST) $postfilters[] = $fn;
@@ -566,6 +567,7 @@ function FPLTemplate($pagename, &$matches, $opt) {
   $fnlist = $FPLTemplateFunctions;
   $output = '';
   foreach($FPLTemplateFunctions as $fn=>$i) {
+    if ($i<0) continue;
     StopWatch("FPLTemplate: $fn");
     $fn($pagename, $matches, $opt, $tparts, $output);
   }

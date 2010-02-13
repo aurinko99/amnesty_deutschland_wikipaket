@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-/*  Copyright 2004-2009 Patrick R. Michaud (pmichaud@pobox.com)
+/*  Copyright 2004-2010 Patrick R. Michaud (pmichaud@pobox.com)
     This file is part of PmWiki; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published
     by the Free Software Foundation; either version 2 of the License, or
@@ -57,7 +57,7 @@ Markup('textvar:', '<split',
   '/\\(:\\w[-\\w]*:(?!\\)).*?:\\)/s', '');
 
 ## handle relative text vars in includes
-if (IsEnabled($EnableRelativePageVars, 0)) 
+if (IsEnabled($EnableRelativePageVars, 1)) 
   SDV($QualifyPatterns["/\\{([-\\w\\x80-\\xfe]*)(\\$:?\\w+\\})/e"], 
     "'{' . ('$1' ? MakePageName(\$pagename, '$1') : \$pagename) . '$2'");
 
@@ -180,11 +180,14 @@ Markup('messages', 'directives',
 ## (:comment:)
 Markup('comment', 'directives', '/\\(:comment .*?:\\)/i', '');
 
-## (:title:)
-Markup('title','directives',
+## (:title:) +fix for PITS:00266, 00779
+$tmpwhen = IsEnabled($EnablePageTitlePriority, 0) ? '<include' : 'directives';
+$tmpkeep = IsEnabled($EnablePageTitlePriority, 0) ? '1' : 'NULL';
+Markup('title', $tmpwhen,
   '/\\(:title\\s(.*?):\\)/ei',
   "PZZ(PCache(\$pagename, 
-         \$zz=array('title' => SetProperty(\$pagename, 'title', PSS('$1')))))");
+    \$zz=array('title' => SetProperty(\$pagename, 'title', PSS('$1'), NULL, $tmpkeep))))");
+unset($tmpwhen, $tmpkeep);
 
 ## (:keywords:), (:description:)
 Markup('keywords', 'directives', 
@@ -429,6 +432,8 @@ Markup('^>><<', '<^>>',
 #### special stuff ####
 ## (:markup:) for displaying markup examples
 function MarkupMarkup($pagename, $text, $opt = '') {
+  global $MarkupWordwrapFunction;
+  SDV($MarkupWordwrapFunction, 'wordwrap');
   $MarkupMarkupOpt = array('class' => 'vert');
   $opt = array_merge($MarkupMarkupOpt, ParseArgs($opt));
   $html = MarkupToHTML($pagename, $text, array('escape' => 0));
@@ -437,9 +442,9 @@ function MarkupMarkup($pagename, $text, $opt = '') {
                            "<caption>{$opt['caption']}</caption>");
   $class = preg_replace('/[^-\\s\\w]+/', ' ', @$opt['class']);
   if (strpos($class, 'horiz') !== false) 
-    { $sep = ''; $pretext = wordwrap($text, 40); } 
+    { $sep = ''; $pretext = $MarkupWordwrapFunction($text, 40); } 
   else 
-    { $sep = '</tr><tr>'; $pretext = wordwrap($text, 75); }
+    { $sep = '</tr><tr>'; $pretext = $MarkupWordwrapFunction($text, 75); }
   return Keep(@"<table class='markup $class' align='center'>$caption
       <tr><td class='markup1' valign='top'><pre>$pretext</pre></td>$sep<td 
         class='markup2' valign='top'>$html</td></tr></table>");
