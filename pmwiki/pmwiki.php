@@ -66,7 +66,7 @@ $EditFunctions = array('EditTemplate', 'RestorePage', 'ReplaceOnSave',
   'PreviewPage');
 $EnablePost = 1;
 $ChangeSummary = substr(preg_replace('/[\\x00-\\x1f]|=\\]/', '', 
-                                     stripmagic(@$_REQUEST['csum'])), 0, 100);
+        stripmagic(@$_REQUEST['csum'])), 0, 100);
 $AsSpacedFunction = 'AsSpaced';
 $SpaceWikiWords = 0;
 $RCDelimPattern = '  ';
@@ -98,7 +98,7 @@ $LinkPageCreateFmt =
     href='{\$PageUrl}?action=edit'>\$LinkText</a><a rel='nofollow' 
     class='createlink' href='{\$PageUrl}?action=edit'>?</a>";
 $UrlLinkFmt = 
-  "<a class='urllink' href='\$LinkUrl' rel='nofollow'>\$LinkText</a>";
+  "<a class='urllink' href='\$LinkUrl' title='\$LinkAlt' rel='nofollow'>\$LinkText</a>";
 umask(002);
 $CookiePrefix = '';
 $SiteGroup = 'Site';
@@ -127,17 +127,14 @@ $FmtPV = array(
   '$Namespaced'   => '$AsSpacedFunction($name)',
   '$Group'        => '$group',
   '$Name'         => '$name',
-  '$Titlespaced'  => '@$page["title"] ?
-     str_replace("$", "&#036;", $page["title"]) : $AsSpacedFunction($name)',
-  '$Title'        =>  '@$page["title"] ?
-     str_replace("$", "&#036;", $page["title"]) :
-     ($GLOBALS["SpaceWikiWords"] ? $AsSpacedFunction($name) : $name)',
+  '$Titlespaced'  => 'FmtPageTitle(@$page["title"], $name, 1)',
+  '$Title'        => 'FmtPageTitle(@$page["title"], $name, 0)',
   '$LastModifiedBy' => '@$page["author"]',
   '$LastModifiedHost' => '@$page["host"]',
   '$LastModified' => 'strftime($GLOBALS["TimeFmt"], $page["time"])',
   '$LastModifiedSummary' => '@$page["csum"]',
   '$LastModifiedTime' => '$page["time"]',
-  '$Description' => '@$page["description"]',
+  '$Description'  => '@$page["description"]',
   '$SiteGroup'    => '$GLOBALS["SiteGroup"]',
   '$VersionNum'   => '$GLOBALS["VersionNum"]',
   '$Version'      => '$GLOBALS["Version"]',
@@ -220,15 +217,18 @@ $Conditions['name'] =
   "(boolean)MatchPageNames(\$pagename, FixGlob(\$condparm, '$1*.$2'))";
 $Conditions['match'] = 'preg_match("!$condparm!",$pagename)';
 $Conditions['authid'] = 'NoCache(@$GLOBALS["AuthId"] > "")';
-$Conditions['exists'] = 'PageExists(MakePageName($pagename, $condparm))';
+$Conditions['exists'] = "(boolean)ListPages(FixGlob(
+  str_replace(array('[[',']]'), array('', ''), \$condparm) , '$1*.$2'))";
 $Conditions['equal'] = 'CompareArgs($condparm) == 0';
 function CompareArgs($arg) 
   { $arg = ParseArgs($arg); return strcmp(@$arg[''][0], @$arg[''][1]); }
 
 $Conditions['auth'] = 'NoCache(CondAuth($pagename, $condparm))';
 function CondAuth($pagename, $condparm) {
+  global $HandleAuth;
   @list($level, $pn) = explode(' ', $condparm, 2);
   $pn = ($pn > '') ? MakePageName($pagename, $pn) : $pagename;
+  if (@$HandleAuth[$level]>'') $level = $HandleAuth[$level];
   return (boolean)RetrieveAuthPage($pn, $level, false, READPAGE_CURRENT);
 }
 
@@ -329,6 +329,15 @@ SDV($CurrentTimeISO, strftime($TimeISOFmt, $Now));
 if (IsEnabled($EnableStdConfig,1))
   include_once("$FarmD/scripts/stdconfig.php");
 
+if (is_array($PostConfig) && IsEnabled($EnablePostConfig, 1)) {
+  asort($PostConfig, SORT_NUMERIC);
+  foreach ($PostConfig as $k=>$v) {
+    if (!$k || !$v) continue;
+    if (function_exists($k)) $k($pagename);
+    elseif (file_exists($k)) include_once($k);
+  }
+}
+
 foreach((array)$InterMapFiles as $f) {
   $f = FmtPageName($f, $pagename);
   if (($v = @file($f))) 
@@ -397,8 +406,8 @@ function PQA($x) {
     foreach($attr as $a) {
       if (preg_match('/^on/i', $a[1])) continue;
       $out .= $a[1] . '=' 
-              . preg_replace( '/^(?![\'"]).*$/e', 
-                  "\"'\".str_replace(\"'\", '&#39;', PSS('$0')).\"'\"", $a[2])
+              . preg_replace( '/^([\'"]?)(.*)\\1$/e', 
+                  "\"'\".str_replace(\"'\", '&#39;', PSS('$2')).\"'\"", $a[2])
               . ' ';
     }
   }
@@ -815,10 +824,27 @@ function FmtPageName($fmt, $pagename) {
   return $fmt;
 }
 
+## FmtPageTitle returns the page title, or the page name
+## It localizes standard technical pages (RecentChanges...)
+function FmtPageTitle($title, $name, $spaced=0) {
+  if($title>'') return str_replace("$", "&#036;", $title);
+  global $SpaceWikiWords, $AsSpacedFunction;
+  if(preg_match("/^(Site(Admin)?
+    |(All)?(Site|Group)(Header|Footer|Attributes)
+    |(Side|Left|Right)Bar
+    |(Wiki)?Sand[Bb]ox
+    |(All)?Recent(Changes|Uploads)|(Auth|Edit)Form
+    |InterMap|PageActions|\\w+QuickReference|\\w+Templates
+    |NotifyList|AuthUser|ApprovedUrls|(Block|Auth)List
+    )$/x", $name) && $name != XL($name))
+      return XL($name);
+  return ($spaced || $SpaceWikiWords) ? $AsSpacedFunction($name) : $name;
+}
+
 ##  FmtTemplateVars uses $vars to replace all occurrences of 
 ##  {$$key} in $text with $vars['key'].
 function FmtTemplateVars($text, $vars, $pagename = NULL) {
-  global $FmtPV;
+  global $FmtPV, $EnableUndefinedTemplateVars;
   if ($pagename) {
     $pat = implode('|', array_map('preg_quote', array_keys($FmtPV)));
     $text = preg_replace("/\\{\\$($pat)\\}/e", 
@@ -827,6 +853,8 @@ function FmtTemplateVars($text, $vars, $pagename = NULL) {
   foreach(preg_grep('/^[\\w$]/', array_keys($vars)) as $k)
     if (!is_array($vars[$k]))
       $text = str_replace("{\$\$$k}", $vars[$k], $text);
+  if(! IsEnabled($EnableUndefinedTemplateVars, 0))
+    $text = preg_replace("/\\{\\$\\$\\w+\\}/", '', $text);
   return $text;
 }
 
@@ -1686,6 +1714,7 @@ function PostPage($pagename, &$page, &$new) {
   global $DiffKeepDays, $DiffFunction, $DeleteKeyPattern, $EnablePost,
     $Now, $Charset, $Author, $WikiDir, $IsPagePosted, $DiffKeepNum;
   SDV($DiffKeepDays,3650);
+  SDV($DiffKeepNum,20);
   SDV($DeleteKeyPattern,"^\\s*delete\\s*$");
   $IsPagePosted = false;
   if ($EnablePost) {
@@ -1698,12 +1727,14 @@ function PostPage($pagename, &$page, &$new) {
       $new["diff:$Now:{$page['time']}:$diffclass"] =
         $DiffFunction($new['text'],@$page['text']);
     $keepgmt = $Now-$DiffKeepDays * 86400;
-    $keepnum = IsEnabled($DiffKeepNum, 20);
+    $keepnum = array(); 
     $keys = array_keys($new);
     foreach($keys as $k)
-      if (preg_match("/^\\w+:(\\d+)/",$k,$match) 
-        && --$keepnum<0 && $match[1]<$keepgmt)
-        unset($new[$k]);
+      if (preg_match("/^\\w+:(\\d+)/",$k,$match)) {
+        $keepnum[$match[1]] = 1;
+        if(count($keepnum)>$DiffKeepNum && $match[1]<$keepgmt) 
+          unset($new[$k]);
+      }
     if (preg_match("/$DeleteKeyPattern/",$new['text'])){
       if(@$new['passwdattr']>'' && !CondAuth($pagename, 'attr'))
         Abort('$[The page has an "attr" attribute and cannot be deleted.]');

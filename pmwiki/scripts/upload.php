@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-/*  Copyright 2004-2009 Patrick R. Michaud (pmichaud@pobox.com)
+/*  Copyright 2004-2010 Patrick R. Michaud (pmichaud@pobox.com)
     This file is part of PmWiki; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published
     by the Free Software Foundation; either version 2 of the License, or
@@ -174,7 +174,7 @@ function HandleUpload($pagename, $auth = 'upload') {
 }
 
 function HandleDownload($pagename, $auth = 'read') {
-  global $UploadFileFmt, $UploadExts, $DownloadDisposition;
+  global $UploadFileFmt, $UploadExts, $DownloadDisposition, $EnableIMSCaching;
   SDV($DownloadDisposition, "inline");
   UploadAuth($pagename, $auth);
   $upname = MakeUploadName($pagename, @$_REQUEST['upname']);
@@ -184,14 +184,23 @@ function HandleDownload($pagename, $auth = 'read') {
     Abort("?requested file not found");
     exit();
   }
+  if (IsEnabled($EnableIMSCaching, 0)) {
+    header('Cache-Control: private');
+    header('Expires: ');
+    $filelastmod = gmdate('D, d M Y H:i:s \G\M\T', filemtime($filepath));
+    if (@$_SERVER['HTTP_IF_MODIFIED_SINCE'] == $filelastmod)
+      { header("HTTP/1.0 304 Not Modified"); exit(); }
+    header("Last-Modified: $filelastmod");
+  }
   preg_match('/\\.([^.]+)$/',$filepath,$match); 
   if ($UploadExts[@$match[1]]) 
     header("Content-Type: {$UploadExts[@$match[1]]}");
   header("Content-Length: ".filesize($filepath));
   header("Content-disposition: $DownloadDisposition; filename=\"$upname\"");
-  $fp = fopen($filepath, "r");
+  $fp = fopen($filepath, "rb");
   if ($fp) {
     while (!feof($fp)) echo fread($fp, 4096);
+    flush();
     fclose($fp);
   }
   exit();

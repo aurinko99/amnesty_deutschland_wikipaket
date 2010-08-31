@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-/*  Copyright 2004-2009 Patrick R. Michaud (pmichaud@pobox.com)
+/*  Copyright 2004-2010 Patrick R. Michaud (pmichaud@pobox.com)
     This file is part of PmWiki; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published
     by the Free Software Foundation; either version 2 of the License, or
@@ -592,8 +592,8 @@ function FPLTemplateLoad($pagename, $matches, $opt, &$tparts){
   $ttext = preg_replace('/\\[\\[#[A-Za-z][-.:\\w]*\\]\\]/', '', $ttext);
 
   ##  extract portions of template
-  $tparts = preg_split('/\\(:(template)\\s+(\\w+)\\s*(.*?):\\)/i', $ttext, -1,
-    PREG_SPLIT_DELIM_CAPTURE);
+  $tparts = preg_split('/\\(:(template)\\s+([-!]?)\\s*(\\w+)\\s*(.*?):\\)/i',
+    $ttext, -1, PREG_SPLIT_DELIM_CAPTURE);
 }
 
 ## Merge parameters from (:template default :) with those in the (:pagelist:)
@@ -602,9 +602,9 @@ function FPLTemplateDefaults($pagename, $matches, &$opt, &$tparts){
   $i = 0;
   while ($i < count($tparts)) {
     if ($tparts[$i] != 'template') { $i++; continue; }
-    if ($tparts[$i+1] != 'defaults' && $tparts[$i+1] != 'default') { $i+=4; continue; }
-    $opt = array_merge(ParseArgs($tparts[$i+2], $PageListArgPattern), $opt);
-    array_splice($tparts, $i, 3);
+    if ($tparts[$i+2] != 'defaults' && $tparts[$i+2] != 'default') { $i+=5; continue; }
+    $opt = array_merge(ParseArgs($tparts[$i+3], $PageListArgPattern), $opt);
+    array_splice($tparts, $i, 4);
   }
   SDVA($opt, array('class' => 'fpltemplate', 'wrap' => 'div'));
 }
@@ -650,10 +650,10 @@ function FPLTemplateFormat($pagename, $matches, $opt, $tparts, &$output){
     $t = 0;
     while($t < count($tparts))
     {
-      if($tparts[$t]=='template' && $tparts[$t+1]=='none')
+      if($tparts[$t]=='template' && $tparts[$t+2]=='none')
       {
-         $out .= MarkupRestore($tparts[$t+3]);
-         $t+=3;
+         $out .= MarkupRestore($tparts[$t+4]);
+         $t+=4;
       }
       $t++;
     }
@@ -667,40 +667,26 @@ function FPLTemplateFormat($pagename, $matches, $opt, $tparts, &$output){
     while ($t < count($tparts)) {
       if ($tparts[$t] != 'template') { $item = $tparts[$t]; $t++; }
       else {
-        list($when, $control, $item) = array_slice($tparts, $t+1, 3); $t+=4;
+        list($neg, $when, $control, $item) = array_slice($tparts, $t+1, 4); $t+=5;
         if($when=='none') continue;
         if (!$control) {
-          if ($when == 'first' && $i != 0) continue;
-          if ($when == 'last' && $i != count($matches) - 1) continue;
+          if ($when == 'first' && ($neg xor ($i != 0))) continue;
+          if ($when == 'last' && ($neg xor ($i != count($matches) - 1))) continue;
         } else {
           if ($when == 'first' || !isset($last[$t])) {
-            $Cursor['<'] = $Cursor['&lt;'] = (string)@$matches[$i-1];
-            $Cursor['='] = $pn;
-            $Cursor['>'] = $Cursor['&gt;'] = (string)@$matches[$i+1];
-            $curr = str_replace($vk, $vv, $control);
-            $curr = preg_replace('/\\{(=|&[lg]t;)(\\$:?\\w+)\\}/e',
-                        "PageVar(\$pn, '$2', '$1')", $curr);
-            if ($when == 'first' && $i > 0 && $last[$t] == $curr) continue;
+            $curr = FPLExpandItemVars($control, $matches, $i, $pseudovars);
+            if ($when == 'first' && ($neg xor (($i != 0) && ($last[$t] == $curr))))
+              { $last[$t] = $curr; continue; }
             $last[$t] = $curr;
           }
           if ($when == 'last') {
-            $Cursor['<'] = $Cursor['&lt;'] = $pn;
-            $Cursor['='] = (string)@$matches[$i+1];
-            $Cursor['>'] = $Cursor['&gt;'] = (string)@$matches[$i+2];
-            $next = str_replace($vk, $vv, $control);
-            $next = preg_replace('/\\{(=|&[lg]t;)(\\$:?\\w+)\\}/e',
-                        "PageVar(\$pn, '$2', '$1')", $next);
-            if ($next == $last[$t] && $i != count($matches) - 1) continue;
+            $next = FPLExpandItemVars($control, $matches, $i+1, $pseudovars);
+            if ($neg xor ($next == $last[$t] && $i != count($matches) - 1)) continue;
             $last[$t] = $next;
           }
         }
       }
-      $Cursor['<'] = $Cursor['&lt;'] = (string)@$matches[$i-1];
-      $Cursor['='] = $pn;
-      $Cursor['>'] = $Cursor['&gt;'] = (string)@$matches[$i+1];
-      $item = str_replace($vk, $vv, $item);
-      $item = preg_replace('/\\{(=|&[lg]t;)(\\$:?\\w+)\\}/e',
-                  "PVSE(PageVar(\$pn, '$2', '$1'))", $item);
+      $item = FPLExpandItemVars($item, $matches, $i, $pseudovars);
       $out .= MarkupRestore($item);
     }
   }
@@ -714,6 +700,19 @@ function FPLTemplateFormat($pagename, $matches, $opt, $tparts, &$output){
   }
   $Cursor = $savecursor;
   $output .= $out;
+}
+## This function moves repeated code blocks out of FPLTemplateFormat()
+function FPLExpandItemVars($item, $matches, $idx, $psvars) {
+  global $Cursor, $EnableUndefinedTemplateVars;
+  $Cursor['<'] = $Cursor['&lt;'] = (string)@$matches[$idx-1];
+  $Cursor['='] = (string)@$matches[$idx];
+  $Cursor['>'] = $Cursor['&gt;'] = (string)@$matches[$idx+1];
+  $item = str_replace(array_keys($psvars), array_values($psvars), $item);
+  $item = preg_replace('/\\{(=|&[lg]t;)(\\$:?\\w+)\\}/e',
+              "PVSE(PageVar(\$pn, '$2', '$1'))", $item);
+  if(! IsEnabled($EnableUndefinedTemplateVars, 0))
+    $item = preg_replace("/\\{\\$\\$\\w+\\}/", '', $item);
+  return $item;
 }
 
 ########################################################################
