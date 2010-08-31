@@ -26,7 +26,7 @@
 +----------------------------------------------------------------------+
 */
 
-$RecipeInfo['Fox']['Version'] = '2010-02-07';
+$RecipeInfo['Fox']['Version'] = '2010-04-12';
 
 $FmtPV['$FoxVersion'] = "'{$RecipeInfo["Fox"]["Version"]}'";
 
@@ -152,7 +152,7 @@ Markup('foxpost','directives','/\(:fox-?(post|add|copy|replace|ptv|mail)\\s+(.*?
 # create hidden HTML input tags for template and target pages, for foxpost and foxcopy markup
 function FoxPostMarkup($pagename, $act, $args) {
 	if ($act=='post') $act = 'add'; //'post' deprecated in favour of 'add'
-	$defaults = array('put'=>'','mark'=>'', 'endmark'=>'', 'ptvfields'=>'', 'ptvfmt'=>'','ptvclear'=>'','foxtemplate'=>''); //placeholders
+	$defaults = array('if'=>'', 'put'=>'','mark'=>'', 'endmark'=>'', 'ptvfields'=>'', 'ptvfmt'=>'','ptvclear'=>'','foxtemplate'=>''); //placeholders
 	$put_names = array('top','bottom','prepend','append','below','above','belowform','aboveform','string','marktomark');
 	$args = ParseArgs($args,'(?>([-\\w]+(?:\.[-\\w]+)?(?:\\w#[-.\\w]*)?(?:\\#[-.\\w]*)?)(?:=&gt;|[=:]))');
 	$opt = array_merge($defaults, $args);
@@ -339,6 +339,8 @@ function FoxHandlePost($pagename, $auth) {
    		$fx['foxaction'] = 'display';
    		$fx['target'] = $pagename;
    		unset($fx['redir']);
+   		unset($fx[':target']);
+   		unset($fx['ptvtarget']);
    	}
    }
 
@@ -527,17 +529,19 @@ function FoxTargetList ($pagename, &$fx) {
 	$xtar = array();
 	foreach($fx as $k => $ar) {
 		if ($k{0}!=':') continue;
-		foreach($ar as $i => $v) {
+		foreach($ar as $i => $v) { 
 			$n = substr($k,1); // remove leading :
 			if ($v!='')
 				$xtar[$i][$n] = $v; // set only non-empty values
+			if ($n=='if' && !CondText($pagename, 'if '.$v, 'yes'))
+				$xtar[$i]['target'] = '';
 		}
 	}	
 	//remove entries with missing target silently
 	foreach ($xtar as $i => $targ)
 		if ($targ['target']=='') unset($xtar[$i]);
 		
-	## if($FoxDebug>2) { echo "<pre>\$xtar  "; print_r($xtar); echo "</pre>"; }
+	## if($FoxDebug>2) { 	echo "<pre>\$xtar  "; print_r($xtar); echo "</pre>"; }
 
 	//merge input targets. Process 1.extended markup targets, 2.std markup targets, 3.std ptv targets, 4. newedit target
 	$tar = array_merge($xtar, $star, $ptar, $ntar);
@@ -1184,13 +1188,16 @@ function FoxIVReplace($pn, $fx, &$str) {
 	#replace {$$name} fields with values
 	$str = preg_replace('/\\{\\$\\$([a-z][-_\\w]*)\\}/ie', 
 							"FoxValue(\$fx, '', PSS('$0'), PSS('$1'), '')", $str);
+#echo "<pre>IVnew1=".$str."</pre>";							
 	#replace {$$name[num]} fields
 	$str = preg_replace('/\\{\\$\\$([a-z][-_\\w]*)\\[\\s*([a-z0-9]+)\\s*\\]\\}/ie',
 							"FoxValue(\$fx, '', PSS('$0'), PSS('$1'), PSS('$2'))", $str);
+#echo "<pre>IVnew2=".$str."</pre>";							
 	#replace {$$(function args...)} string must be exactly a markup expression!
 	$str = preg_replace('/^\\{\\$\\$(\\(\\w+\\b.*?\\))\\}$/e',
 							"MarkupExpression(\$pn, PSS('$1'))", $str);
-	//DEBUG//
+#echo "<pre>IVnew3=".$str."</pre>";							
+	//DEBUG// 
 	if($FoxDebug>4) echo "<pre>IVNEW=".$str."</pre>";//DEBUG//
 	return $str;
 } //}}}

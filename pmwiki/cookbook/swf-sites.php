@@ -3,7 +3,7 @@
 /* 
     
 	Original info:
-	copyright 2009, Adam Overton
+	copyright 2010, Adam Overton
 	based on code by Jon Haupt, copyright 2007-8
 	which was built on code from swf.php copyright 2004 Patrick R. Michaud
 	and from quicktime.php copyright 2006 Sebastian Siedentopf.
@@ -23,7 +23,6 @@
 		(:googlevideo videocode:)
 		(:youtube videocode:)
 		(:vimeo videocode:)
-		(:flickrvid videocode secret=value:)
 	where 'videocode' is the unique alpha-numberic id assigned to your movie. (For FlickrVid, see more details below).
 	For example, if the URL to play the video is:
 		http://video.google.com/videoplay?docid=348928491823948192,
@@ -39,7 +38,7 @@
 		* [ brackets denote optional arguments ]
 	
 	An abbreviated* list of common YouTube parameters:
-		* width & height (defaults: width=425, height=244) - in pixels, but don't add 'px' at the end! (non-api)
+		* width & height (defaults: width=425, height=344) - in pixels, but don't add 'px' at the end! (non-api)
 		* plwidth & plheight (defaults: width=480, height=385) - height and width for playlists, which are slightly larger than regular videos (non-api)
 		* scale (default: 1) - scale the video's dimensions by some numerical factor (ex: 0.5 = half-size) (non-api)
 		* loop - 0 or 1 (default: 0)
@@ -125,37 +124,10 @@
 		* $GoogleVideoROEFmt - default is '(:googlevideo $1 scale=1:)' - default replacement of Vimeo embed code - change it if you'd rather Vimeo embed code be replaced with a different set of default variables.
 	
 	
-	FLICKRVID
-	FlickrVid markup accepts a handful of parameters, though not as many as Vimeo & Youtube:
-		(:flickrvid videocode secret=secretval [ param1=val1 param2=val2 ... ] :) 
-	
-	Look for videocode in the embed code for "photo_id=somenumber"
-
-	FlickrVid parameters:
-		* secret (required) - this can be obtained from the embed code on the users pages - look for photo_secret=somenumber
-		* width & height (defaults: width=400, height=300) - in pixels, but don't add 'px' at the end! (non-api)
-		* scale (default: 1) - scale the video's dimensions by some numerical factor (ex: 0.5 = half-size) (non-api)
-		* showinfo - true or false (default: true) - display the video information before and after playing
-		
-	Examples:
-		Simplest FlickrVid embed:
-		(:flickrvid secret=98765 id=43210:) 
-	
-		... or provide your own width & height, and turn video info off
-		(:flickrvid secret=98765 id=43210 width=425 height=344 showinfo=false:) 
-	
-	The following default setup variables are available for use in config.php, before including the recipe:
-	
-		* $FlickrVidDefaultParams
-		* $FlickrVidROEenabled - true or false (default: true) - turns Replace-On-Edit-Patterns Off/On for embed code entered into a browser window
-		* $FlickrVidROEFmt - default is '(:flickrvid $1 scale=1:)' - default replacement of FlickrVid embed code - change it if you'd rather FlickrVid embed code be replaced with a different set of default variables.
-	
-	* Note: FlickrVid is not yet XHTML 1.0 compliant - I was unable to locate any leads online yet that work.
-	If you have any suggestions, do let me know.
-	
 	. . .
 		
 	Versions:
+	* 2010-05-17 - moved FlickrVid recipe into a separate recipe with FlickrSlideshow
 	* 2009-10-25 - slightly cleaned up & simplified youtube code (scaling); removed plwidth & plheight from docs, to prevent misuse.
 	* 2009-10-20 - 
 		** Vimeo, GoogleVideo, FlickrVid: updated (:vimeo:) & (:googlevideo:) & (:flickrvid:) to allow arguments, and created a number of various setup variables accessed in config.php
@@ -172,7 +144,7 @@
 */
 
 # Version date
-$RecipeInfo['SWFSites']['Version'] = '2009-10-25';
+$RecipeInfo['SWFSites']['Version'] = '2010-05-17';
 
 
 ### GOOGLEVIDEO
@@ -478,86 +450,6 @@ function ShowYouTube($id, $args='') {
 		$out .= "\n  <embed src='$url' type='application/x-shockwave-flash' allowscriptaccess='always' allowfullscreen='true' wmode='transparent' width='$width' height='$height'></embed>";
 		$out .= "\n</object>";
 	}
-
-	return Keep($out);
-}
-
-
-#### FLICKRVID
-
-Markup('flickrvid', '<img', "/\\(:flickrvid\\s+([^\\s]+)\\s*(.*)\\s*:\\)/e", "ShowFlickrVid('$1','$2')");
-SDVA($FlickrVidDefaultParams, array(
-	'secret' => ''
-	,'width' => '400'
-	,'height' => '300'
-	,'scale' => '1'
-	,'showinfo' => '1'
-));
-#SDV($FlickrVid_XHTMLcompliant, true);
-SDV($FlickrVidROEenabled, true);
-
-# ROEPatterns - FLICKRVID EMBED CONVERSION 
-# Converts pasted FlickrVid embed code into valid pmwiki (:flickrvid:) code
-if ($FlickrVidROEenabled) {
-	$ROEPatterns['!<object.*data="http://www\.flickr\.com/apps/video.*<\/object>!ie'] = "FlickrVidROE(PSS('$0'))";
-	
-	SDV($FlickrVidROEFmt, '(:flickrvid [args] scale=1:)');
-	function FlickrVidROE($args) {
-		global $FlickrVidROEFmt;
-
-		# gather other parameters - secret, id, width, height, showinfo
-		if(preg_match('#photo_id=(\d+)#', $args, $matches)) $params = "$matches[1]";
-		## gathering width and height here b/c flickrvid now offers different embed dimensions
-		preg_match('#width=["\'](\d+)["\'] height=["\'](\d+)["\']#', $args, $matches);
-		$params .= " width=".$matches[1]." height=".$matches[2];
-		if(preg_match('#photo_(secret=[^&]+)&#', $args, $matches)) $params .= " $matches[1]";
-		if(strpos($args,'flickr_show_info_box=true')) $params .= " showinfo=true";
-		
-		$out = str_replace('[args]',$params,$FlickrVidROEFmt);
-		return $out;
-	}
-}
-
-function ShowFlickrVid($videocode, $args) {
-	global $FlickrVidDefaultParams;
-
-	$args = array_merge($FlickrVidDefaultParams, ParseArgs($args));
-	
-	if(!$args['secret']) return "flickr error: you must provide the photo_secret";
-	
-	# define width & height
-	## one can supply a 'scale' default different than '1', but it's not suggested, as it could be confusing to users
-	$scale = $args['scale'];
-	$width = $args['width'] * $scale;
-	$height = $args['height'] * $scale;
-
-	# flickr_show_info_box - this is an optional api-argument
-	if ($args['showinfo']=='1' || $args['showinfo']=='true') $showinfo = "&flickr_show_info_box=true";
-
-	# ?v=NNNN doesn't seem to be necessary
-	//$url = "http://www.flickr.com/apps/video/stewart.swf?v=1.167";
-	$url = "http://www.flickr.com/apps/video/stewart.swf";
-	$params = "intl_lang=en-us&photo_secret=".$args['secret']."&photo_id=".$videocode.$showinfo;
-	$hw = "width='$width' height='$height'";
-	#echo "<br />$url $params $hw";
-	
-	/*	# XHTML 1.0 COMPLIANT
-		## seems like this should work, but it doesn't - commented out for now
-		$out = "\n<object type='application/x-shockwave-flash' $hw data='$url' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'>";
-		$out .= "\n   <param name='movie' value='$url' />";
-		$out .= "\n   <param name='flashvars' value='$params' />";
-		$out .= "\n   <param name='bgcolor' value='#000000' />";
-		$out .= "\n   <param name='allowFullScreen' value='true' />";
-		$out .= "\n</object>";
-	*/
-		# NON-COMPLIANT (exactly what Flickr provides)
-		$out = "\n<object type='application/x-shockwave-flash' $hw data='$url' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'>";
-		$out .= "\n   <param name='flashvars' value='$params' />";
-		$out .= "\n   <param name='movie' value='$url' />";
-		$out .= "\n   <param name='bgcolor' value='#000000' />";
-		$out .= "\n   <param name='allowFullScreen' value='true' />";
-		$out .= "\n   <embed type='application/x-shockwave-flash' src='$url' bgcolor='#000000' allowfullscreen='true' flashvars='$params' $hw></embed>";
-		$out .= "\n</object>";
 
 	return Keep($out);
 }
