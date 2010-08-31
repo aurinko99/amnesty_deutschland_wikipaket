@@ -8,5 +8,5 @@ host=84.165.242.54
 name=Site.Verlauf
 rev=23
 targets=
-text=(:if name Profile.*:)%0a[[{$ScriptUrl}|Startseite]] &#155; [[{$ScriptUrl}/Intern/Start|Intern]] &#155; [[{$ScriptUrl}/Intern/Adressbuch|Adressbuch]] &#155; '''{*$Title}'''%0a(:ifend:)%0a(:if name Main.*,-Main.Start:)%0a[[{$ScriptUrl}|Startseite]] › '''{$Title}'''%0a(:elseif !name Main.*,Profile.*:)%0a[[{$ScriptUrl}|Startseite]] &#155; [[{$ScriptUrl}/{$Group}/Start|{$Group}]] &#155; '''{*$Title}'''%0a(:ifend:)
+text=(:if name Profile.*:)%0a[[{$ScriptUrl}|Startseite]] &#155; [[{$ScriptUrl}/Intern/Start|Intern]] &#155; [[{$ScriptUrl}/Intern/Adressbuch|Adressbuch]] &#155; '''{*$Title}'''%0a(:ifend:)%0a(:if name Main.*,-Main.Start:)%0a[[{$ScriptUrl}|Startseite]] › '''{*$Title}'''%0a(:elseif !name Main.*,Profile.*:)%0a[[{$ScriptUrl}|Startseite]] &#155; [[{$ScriptUrl}/{*$Group}/Start|{*$Group}]] &#155; '''{*$Title}'''%0a(:ifend:)
 time=1220529084
