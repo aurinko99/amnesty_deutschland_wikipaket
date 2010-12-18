@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-/*  Copyright 2007 Patrick R. Michaud (pmichaud@pobox.com)
+/*  Copyright 2007-2010 Patrick R. Michaud (pmichaud@pobox.com)
     This file is pmform.php; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published
     by the Free Software Foundation; either version 2 of the License, or
@@ -7,7 +7,7 @@
 
 */
 
-$RecipeInfo['PmForm']['Version'] = '2007-06-12';
+$RecipeInfo['PmForm']['Version'] = '2010-09-04';
 
 if ($VersionNum < 2001946)
   Abort("pmform requires pmwiki-2.2.0-beta46 or later (currently $Version)");
@@ -22,6 +22,7 @@ SDV($PmFormTemplatesFmt,
   array('{$SiteGroup}.LocalTemplates', '{$SiteGroup}.PmFormTemplates'));
 
 SDV($PmFormPostPatterns, array(
+  '/\r/'   => '',
   '/\\(:/' => '( :',
   '/:\\)/' => ': )',
   '/\\$:/' => '$ :'));
@@ -123,7 +124,7 @@ function PmFormMarkup($pagename, $target, $args) {
 
 
 function HandlePmForm($pagename, $auth = 'read') {
-  global $PmFormPostPatterns, $PmFormTemplatesFmt, $MessagesFmt;
+  global $PmFormPostPatterns, $PmFormTemplatesFmt, $PmFormExitFunction;
   $post_opt = RequestArgs($_POST);
   $pat = array_keys($PmFormPostPatterns);
   $rep = array_values($PmFormPostPatterns);
@@ -150,6 +151,12 @@ function HandlePmForm($pagename, $auth = 'read') {
   if (!$errors && @$safe_opt['mailto'])
     $errors = PmFormMail($pagename, $msgtmpl, $opt, $safe_opt);
 
+  SDV($PmFormExitFunction, 'PmFormExit');
+  $PmFormExitFunction($pagename, $errors, $opt, $safe_opt);
+}
+
+function PmFormExit($pagename, $errors, $opt, $safe_opt) {
+  global $MessagesFmt, $PmFormRedirectFunction;
   if ($errors) {
     foreach ((array)$errors as $errmsg) {
       $errmsg = htmlspecialchars($errmsg, ENT_NOQUOTES);
@@ -157,10 +164,12 @@ function HandlePmForm($pagename, $auth = 'read') {
     }
     return HandleDispatch($pagename, 'browse');
   }
-  # $GLOBALS['EnableRedirect'] = 0;
-  if (@$opt['successpage']) Redirect(MakePageName($pagename, $opt['successpage']));
-  Redirect($pagename, '{$PageUrl}?pmform=success');
+  
+  SDV($PmFormRedirectFunction,'Redirect');
+  if (@$opt['successpage']) $PmFormRedirectFunction(MakePageName($pagename, $opt['successpage']));
+  $PmFormRedirectFunction($pagename, '{$PageUrl}?pmform=success');
 }
+
 
 
 function PmFormSave($pagename, $msgtmpl, $opt, $safe_opt) {

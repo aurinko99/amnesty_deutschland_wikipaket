@@ -55,7 +55,7 @@
 
 */
 
-$RecipeInfo['PowerTools']['Version'] = '2009-09-03';
+$RecipeInfo['PowerTools']['Version'] = '2009-09-17';
 
 
 ## (plist ...)
@@ -400,7 +400,7 @@ function MXDisplayAllPTVs($pagename, $list) {
 # select item at random from csv list provided. No doubles. sep= to specify custom listitem separator
 $MarkupExpr['random'] = 'MXRandomItem($pagename,$args[0],$argp)';
 function MXRandomItem($pagename, $list, $args) {
-	global $RandomItemsUsed; echo $args['sep'];
+	global $RandomItemsUsed;
 	$sep = (isset($args['sep'])) ? $args['sep'] : ',';
 	$sep = str_replace('\n',"\n",$sep);
 	$list = explode($sep,$list);
