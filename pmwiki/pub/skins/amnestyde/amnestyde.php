@@ -1,16 +1,16 @@
 <?php if (!defined('PmWiki')) exit();
 /*
  * PmWiki amnestyde skin
- * Version 1.2.3  (31.08.2010)
+ * Version 1.3  (21.02.2011)
  * @requires PmWiki 2.2
  *
- * Copyright (c) 2008-2010 Amnesty International, Deutsche Sektion
+ * Copyright (c) 2008-2011 Amnesty International, Deutsche Sektion
  */
 global $FmtPV, $SkinName, $SkinVersionDate, $SkinVersionNum, $SkinVersion, $SkinRecipeName, 
        $SkinSourceURL, $RecipeInfo;
 $SkinName = 'amnestyde';
 $SkinRecipeName = "AmnestyDe";
-$RecipeInfo['amnestyde']['Version'] = '2010-12-18 (1.2.4a)';
+$RecipeInfo['amnestyde']['Version'] = '2011-02-21 (1.3)';
 
 ## Add a custom page storage location
 global $PageStorePath, $WikiLibDirs;

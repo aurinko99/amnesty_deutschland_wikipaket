@@ -97,6 +97,8 @@ include_once("$FarmD/cookbook/pagerevinline/pagerevinline.php");
 include_once("$FarmD/cookbook/searchbox2.php");
 
 ##Bilder
+$Mini['EnableLightbox'] = 1;
+$Mini['LbUrl'] = "$FarmPubDirUrl/lb" ; 
 include_once("$FarmD/cookbook/mini.php");
 
 ##AttachDelete
