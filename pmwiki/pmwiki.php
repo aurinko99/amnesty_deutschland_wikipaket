@@ -1,7 +1,7 @@
 <?php
 /*
     PmWiki
-    Copyright 2001-2010 Patrick R. Michaud
+    Copyright 2001-2011 Patrick R. Michaud
     pmichaud@pobox.com
     http://www.pmichaud.com/
 
@@ -329,10 +329,10 @@ SDV($CurrentTimeISO, strftime($TimeISOFmt, $Now));
 if (IsEnabled($EnableStdConfig,1))
   include_once("$FarmD/scripts/stdconfig.php");
 
-if (is_array($PostConfig) && IsEnabled($EnablePostConfig, 1)) {
+if (is_array($PostConfig)) {
   asort($PostConfig, SORT_NUMERIC);
   foreach ($PostConfig as $k=>$v) {
-    if (!$k || !$v) continue;
+    if (!$k || !$v || $v<0) continue;
     if (function_exists($k)) $k($pagename);
     elseif (file_exists($k)) include_once($k);
   }
@@ -355,9 +355,6 @@ foreach((array)$InterMapFiles as $f) {
   }
 }
 
-$LinkPattern = implode('|',array_keys($LinkFunctions));
-SDV($LinkPageCreateSpaceFmt,$LinkPageCreateFmt);
-
 $keys = array_keys($AuthCascade);
 while ($keys) {
   $k = array_shift($keys); $t = $AuthCascade[$k];
@@ -365,7 +362,11 @@ while ($keys) {
     { unset($AuthCascade[$k]); $AuthCascade[$k] = $t; array_push($keys, $k); }
 }
 
+$LinkPattern = implode('|',array_keys($LinkFunctions));  # after InterMaps
+SDV($LinkPageCreateSpaceFmt,$LinkPageCreateFmt);
 $ActionTitle = FmtPageName(@$ActionTitleFmt[$action], $pagename);
+
+
 if (!@$HandleActions[$action] || !function_exists($HandleActions[$action])) 
   $action='browse';
 if (IsEnabled($EnableActions, 1)) HandleDispatch($pagename, $action);
@@ -771,10 +772,19 @@ function PageVar($pagename, $var, $pn = '') {
   if ($pn) {
     if (preg_match('/^(.+)[.\\/]([^.\\/]+)$/', $pn, $match)
         && !isset($PCache[$pn]['time']) 
-        && (!@$FmtPV[$var] || strpos($FmtPV[$var], '$page') !== false)) 
-      { $page = ReadPage($pn, READPAGE_CURRENT); PCache($pn, $page); }
+        && (!@$FmtPV[$var] || strpos($FmtPV[$var], '$page') !== false)) {
+      $page = ReadPage($pn, READPAGE_CURRENT);
+      PCache($pn, $page);
+    }
     @list($d, $group, $name) = $match;
     $page = &$PCache[$pn];
+    if(strpos($FmtPV[$var], '$authpage') !== false) {
+      if(!isset($page['=auth']['read'])) {
+        $x = RetrieveAuthPage($pn, 'read', false, READPAGE_CURRENT);
+        if($x) PCache($pn, $x);
+      }
+      if(@$page['=auth']['read']) $authpage = &$page;
+    }
   } else { $group = ''; $name = ''; }
   if (@$FmtPV[$var]) return eval("return ({$FmtPV[$var]});");
   if (strncmp($var, '$:', 2)==0) return PageTextVar($pn, substr($var, 2));
@@ -784,7 +794,7 @@ function PageVar($pagename, $var, $pn = '') {
   
 ## FmtPageName handles $[internationalization] and $Variable 
 ## substitutions in strings based on the $pagename argument.
-function FmtPageName($fmt, $pagename, $expand_globals=1) {
+function FmtPageName($fmt, $pagename) {
   # Perform $-substitutions on $fmt relative to page given by $pagename
   global $GroupPattern, $NamePattern, $EnablePathInfo, $ScriptUrl,
     $GCount, $UnsafeGlobals, $FmtV, $FmtP, $FmtPV, $PCache, $AsSpacedFunction;
@@ -870,7 +880,7 @@ function XLSDV($lang,$a) {
   foreach($a as $k=>$v) { if (!isset($XL[$lang][$k])) $XL[$lang][$k]=$v; }
 }
 function XLPage($lang,$p) {
-  global $TimeFmt,$XLLangs,$FarmD;
+  global $TimeFmt,$XLLangs,$FarmD, $EnableXLPageScriptLoad;
   $page = ReadPage($p, READPAGE_CURRENT);
   if (!$page) return;
   $text = preg_replace("/=>\\s*\n/",'=> ',@$page['text']);
@@ -878,7 +888,7 @@ function XLPage($lang,$p) {
     if (preg_match('/^\\s*[\'"](.+?)[\'"]\\s*=>\\s*[\'"](.+)[\'"]/',$l,$match))
       $xl[stripslashes($match[1])] = stripslashes($match[2]);
   if (isset($xl)) {
-    if (@$xl['xlpage-i18n']) {
+    if (IsEnabled($EnableXLPageScriptLoad, 1) && @$xl['xlpage-i18n']) {
       $i18n = preg_replace('/[^-\\w]/','',$xl['xlpage-i18n']);
       include_once("$FarmD/scripts/xlpage-$i18n.php");
     }
@@ -1449,10 +1459,11 @@ function LinkPage($pagename,$imap,$path,$alt,$txt,$fmt=NULL) {
   }
   $url = PageVar($tgtname, '$PageUrl');
   $txt = str_replace("$", "&#036;", $txt);
+  $alt = str_replace(array('"',"'"),array('&#34;','&#39;'),$alt);
   if (@$EnableLinkPageRelative)
     $url = preg_replace('!^[a-z]+://[^/]*!i', '', $url);
-  $fmt = str_replace(array('$LinkUrl', '$LinkText'),
-                     array($url.PUE($qf), $txt), $fmt);
+  $fmt = str_replace(array('$LinkUrl', '$LinkText', '$LinkAlt'),
+                     array($url.PUE($qf), $txt, $alt), $fmt);
   return FmtPageName($fmt,$tgtname);
 }
 

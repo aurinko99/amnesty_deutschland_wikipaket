@@ -54,6 +54,9 @@ $GroupPattern = '(?:Site|SiteAdmin|PmWikiDe|Main|Profile|Intern)';
 $EnableDirectDownload=0;
 SDV($UploadMaxSize,10000000);
 
+##Maximale Anzahl von Seiten im Archiv
+$MaxIncludes = 300;
+
 #################
 #### RECIPES ####
 #################
@@ -92,6 +95,9 @@ include_once("$FarmD/cookbook/pagerevinline/pagerevinline.php");
 	
 ##Suchfeld
 include_once("$FarmD/cookbook/searchbox2.php");
+
+##Bilder
+include_once("$FarmD/cookbook/mini.php");
 
 ##AttachDelete
 include_once("$FarmD/cookbook/attachdel.php");
