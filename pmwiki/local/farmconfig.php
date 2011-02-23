@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-$FarmPubDirUrl = 'http://wikifarm.amnesty-intern.de/pub';
+$FarmPubDirUrl = 'http://wikifarm.amnesty-intern.de/pub_1_3';
 ## Use "Clean URLs".
 $EnablePathInfo = 1;
 
@@ -99,6 +99,7 @@ include_once("$FarmD/cookbook/searchbox2.php");
 ##Bilder
 $Mini['EnableLightbox'] = 1;
 $Mini['LbUrl'] = "$FarmPubDirUrl/lb" ; 
+$Mini['thumbs'][0] = "160x160";
 include_once("$FarmD/cookbook/mini.php");
 
 ##AttachDelete

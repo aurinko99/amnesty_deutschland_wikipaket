@@ -453,18 +453,6 @@ div.rssfeed {
 	padding: 0 5px 5px 5px;
 }
 
-.rssfeed img {
-	float: left;
-	margin: 5px 10px 5px 5px;
-	max-width: 100px;
-}
-
-.rssfeed img {
-	float: left;
-	margin: 5px 10px 5px 5px;
-	max-width: 150px;
-}
-
 .rssfeed h1 {
 	margin: 0 5px 5px 5px;
 	margin-bottom: 5px;
@@ -590,13 +578,11 @@ div.doppelt .eintrag {
 }
 
 div.doppelt .eintrag img {
-	float: left;
-	margin: 5px 10px 5px 5px;
+    margin: 5px 10px 5px 5px;
 }
-
+ 
 .eintrag img {
-	float: left;
-	margin: 5px 10px 5px 5px;
+    margin: 5px 10px 5px 5px;
 }
 
 .eintrag h1 {
