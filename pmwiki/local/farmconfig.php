@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-$FarmPubDirUrl = 'http://wikifarm.amnesty-intern.de/pub_1_3';
+$FarmPubDirUrl = 'http://wikifarm.amnesty-intern.de/pub';
 ## Use "Clean URLs".
 $EnablePathInfo = 1;
 

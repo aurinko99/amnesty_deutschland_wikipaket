@@ -579,10 +579,19 @@ div.doppelt .eintrag {
 
 div.doppelt .eintrag img {
     margin: 5px 10px 5px 5px;
+    float: left;
+    max-width: 100px;
 }
  
 .eintrag img {
     margin: 5px 10px 5px 5px;
+    float: left;
+    max-width: 150px;
+}
+
+.eintrag img.mini, .div.doppelt .eintrag img.mini {
+	max-width: none;
+	float: none;
 }
 
 .eintrag h1 {
