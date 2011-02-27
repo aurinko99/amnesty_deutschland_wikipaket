@@ -8,6 +8,6 @@ host=84.165.242.54
 name=Main.Informieren-International
 rev=7
 targets=
-text=(:title Internationale Meldungen:)%0a>>submenu%3c%3c%0a!Links im Kontext%0a* [[http://www.amnesty.org]]%0a>>%3c%3c%0a>>rssfeed%3c%3c%0a(:pmfeed feed='http://www.amnesty.org/en/news-and-updates/%252A/%252A/feed' showitemdescr='true' max_count=3 title='Aktuelle Informationen von amnesty.org - ':)%0a>>%3c%3c
+text=(:title Internationale Meldungen:)%0a>>submenu%3c%3c%0a!Links im Kontext%0a* [[http://www.amnesty.org]]%0a>>%3c%3c%0a>>rssfeed%3c%3c%0a(:pmfeed feed='http://www.amnesty.org/en/news-and-updates/all/all/feed' showitemdescr='true' max_count=3 title='Aktuelle Informationen von amnesty.org - ':)%0a>>%3c%3c
 time=1220529011
 title=Internationale Meldungen
