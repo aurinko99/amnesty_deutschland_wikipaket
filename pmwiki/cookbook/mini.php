@@ -1,11 +1,7 @@
 <?php if(!defined('PmWiki'))exit;
 /**
   A mini square thumbnail generator for PmWiki
-  Written by (c) Petko Yotov 2006-2010
-
-  This script is POSTCARDWARE, if you like it or use it,
-  please send me a postcard. Details at
-  http://galleries.accent.bg/Cookbook/Postcard
+  Written by (c) Petko Yotov 2006-2011
 
   This text is written for PmWiki; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published
@@ -16,10 +12,10 @@
   This text is partly based on the ThumbList2 picture gallery
   and on the PmWiki upload.php script.
 
-  Copyright 2006-2010 Petko Yotov http://5ko.fr
+  Copyright 2006-2011 Petko Yotov http://notamment.fr
   Copyright 2004-2007 Patrick R. Michaud http://www.pmichaud.com
 */
-$RecipeInfo['Mini']['Version'] = '20100413';
+$RecipeInfo['Mini']['Version'] = '20110527a';
 
 SDVA($Mini, array('EnableLightbox' => 0,
   'ImgFmt' => '<img class="mini" src="%1$s" title="%2$s" alt="%2$s" border="0" />',
@@ -32,6 +28,7 @@ SDVA($Mini, array('EnableLightbox' => 0,
   'LbJS' => '<script type="text/javascript" src="%1$s/prototype.js"></script>
 <script type="text/javascript" src="%1$s/builder.js"></script>
 <script type="text/javascript" src="%1$s/effects.js"></script>
+<script type="text/javascript" src="%1$s/lightbox-mini.js"></script>
 <script type="text/javascript" src="%1$s/lightbox.js"></script>
 <link rel="stylesheet" href="%1$s/lightbox.css" type="text/css" media="screen"/>',
   'LbUrl' => '$FarmPubDirUrl/lb',
@@ -39,6 +36,7 @@ SDVA($Mini, array('EnableLightbox' => 0,
   'EnableCache' => 0, 'CacheFilename' => '.%s.mini-cache.txt',
   'FixFilenames' => 0,
   'CreateFunction' => 'MiniCreate',
+  'PurgeRedirectFmt' => '{$PageUrl}?action=upload',
 ));
 SDVA($Mini['thumbs'], array('x'=>'100x100x50x50x90xffffff'));
 SDVA($Mini['FixFilenamePatterns'], array('/\\s/'=>'_', '/[^-\\w.]/'=>''));
@@ -46,7 +44,7 @@ SDVA($Mini['FNameRPat'], array("/\\.\\w{3,4}$/i"=>'', '/_+/'=>' '));
 SDVA($HandleActions, array('mini'=>'HandleMini','purgethumbs'=>'HandlePurgeMini'));
 
 Markup('Mini:','<links',
-  "/\\b([Mm]ini\\d?(?:_\\w+)?:)([^\\s\"\\|\\[\\]]+)(\"([^\"]*)\")?/e",
+  "/\\b([Mm]ini\\d?(?:_\\w+)?:)([^\\s\"\\|\\[\\]$KeepToken%]+)(\"([^\"]*)\")?/e",
   "Keep(LinkMini(\$pagename,'$1','$2','$4','$1$2'),'L')");
 Markup('(:mini:)', 'directives', '/\\(:mini (.+):\\)/e', "MiniConf(PSS('$1'))");
 
@@ -109,6 +107,10 @@ function LinkMini($PN, $imap, $path, $alt, $txt, $fmt=NULL, $listonly=0){
     if(function_exists($uMini) ) $mylist = $uMini($mylist); else return "$txt$alt";
   }
 
+  $ImgFmt =  IsEnabled($Mini["ImgFmt$pxidx"],  $Mini['ImgFmt']);
+  $LinkFmt = IsEnabled($Mini["LinkFmt$pxidx"], $Mini['LinkFmt']);
+  $MiniFmt = IsEnabled($Mini["MiniFmt$pxidx"], $Mini['MiniFmt']);
+
   $html = array();
   $htmlH = $htmlF = '';
   foreach($mylist as $file=>$v){
@@ -118,10 +120,15 @@ function LinkMini($PN, $imap, $path, $alt, $txt, $fmt=NULL, $listonly=0){
     if($listonly){ $html[] = "\n$upname"; continue; }
 
     if(!file_exists($fpath)){
-      $FmtV['$LinkText'] = $upname;
-      $FmtV['$LinkUpload'] =
-        FmtPageName("\$PageUrl?action=upload&amp;upname=$upname", $PN);
-      $html[] = FmtPageName($LinkUploadCreateFmt, $PN);
+      if(@$Mini['nofileurl']) {
+        $html[] = sprintf($ImgFmt, $Mini['nofileurl'], '');
+      }
+      else {
+        $FmtV['$LinkText'] = $upname;
+        $FmtV['$LinkUpload'] =
+          FmtPageName("\$PageUrl?action=upload&amp;upname=$upname", $PN);
+        $html[] = FmtPageName($LinkUploadCreateFmt, $PN);
+      }
       continue;
     }
     list($w, $h, $t) = @getimagesize($fpath, $info);
@@ -137,28 +144,28 @@ function LinkMini($PN, $imap, $path, $alt, $txt, $fmt=NULL, $listonly=0){
       $miniurl = PUE("$uploadurl$mupname");
     else{
       $miniurl = PUE(FmtPageName("{\$PageUrl}?action=mini&amp;idx=$pxidx&amp;upname=$upname", $PN));
-      $cache_ok = 0;NoCache();
+      $cache_ok = 0; NoCache();
     }
     if(trim($alt) == '-') $xalt='';
-    elseif($alt>'') $xalt=str_replace('"', "&quot;", $alt);
+    elseif($alt>'') $xalt=str_replace('"', "&quot;", strip_tags($alt));
     else $xalt = preg_replace(array_keys($Mini['FNameRPat']), array_values($Mini['FNameRPat']), $v);
 
     if(IsEnabled($Mini['EnableHeaderFooter'], 0) && strpos($xalt, '|')!==false){
       list($htmlH, $htmlF) = explode('|', $xalt, 2);
       $xalt = trim("$htmlH $htmlF");
     }
-    $out = sprintf($Mini['ImgFmt'], $miniurl, $xalt);
+    $out = sprintf($ImgFmt, $miniurl, $xalt);
     if($imap == 'Mini:'){ # links enabled
       $rel='';
       if($lb>''){
         $HTMLHeaderFmt['lightbox'] = sprintf($Mini['LbJS'], $Mini['LbUrl']);
         $rel = "rel='$lb' title=\"$xalt\"";
       }
-      $out = sprintf($Mini['LinkFmt'], $out, $picurl, $rel);
+      $out = sprintf($LinkFmt, $out, $picurl, $rel);
     }
     $html[] = $out;
   }
-  $html = sprintf($Mini['MiniFmt'], implode(' ', $html));
+  $html = sprintf($MiniFmt, implode(' ', $html));
   if($htmlH) $html = "<span class='miniH'>$htmlH</span> $html";
   if($htmlF) $html .= " <span class='miniF'>$htmlF</span>";
   if($test_cache){
@@ -207,12 +214,10 @@ function MiniParseAttr($x,$d=null) # '100x100x50x50x90xffffff'
 {
   $y = explode('x', $x);
   $y[5] = hexdec(@$y[5]);
-  if($d && $d!=$x)
-  {
+  if($d && $d!=$x) {
     $d = MiniParseAttr($d);
     foreach($d as $k=>$v)
-      if(!isset($y[$k])||$y[$k]=='')
-        $y[$k] = $v;
+      if(!isset($y[$k])||$y[$k]=='') $y[$k] = $v;
   }
   ksort($y);
   return array_map('intval', $y);
@@ -267,7 +272,7 @@ function HandlePurgeMini($PN, $auth='edit'){
         unlink("$udir/$file");
     closedir($dirp);
   }
-  Redirect($PN, '{$PageUrl}?action=upload');
+  Redirect($PN, $Mini['PurgeRedirectFmt']);
 }
 function MiniFixFName($PN, $x){
   global $Mini, $UploadFileFmt;

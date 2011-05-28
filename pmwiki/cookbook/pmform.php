@@ -1,5 +1,5 @@
 <?php if (!defined('PmWiki')) exit();
-/*  Copyright 2007-2010 Patrick R. Michaud (pmichaud@pobox.com)
+/*  Copyright 2007-2011 Patrick R. Michaud (pmichaud@pobox.com)
     This file is pmform.php; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published
     by the Free Software Foundation; either version 2 of the License, or
@@ -7,7 +7,7 @@
 
 */
 
-$RecipeInfo['PmForm']['Version'] = '2010-09-04';
+$RecipeInfo['PmForm']['Version'] = '2011-02-16';
 
 if ($VersionNum < 2001946)
   Abort("pmform requires pmwiki-2.2.0-beta46 or later (currently $Version)");
@@ -259,7 +259,7 @@ function PmFormUpdateVars($pagename, &$text, $opt) {
    
  
 function PmFormMail($pagename, $msgtmpl, $opt, $safe_opt) {
-  global $PmFormMailHeaders, $PmFormMailParameters;
+  global $PmFormMailHeaders, $PmFormMailParameters, $Charset, $EnablePmFormMailSubjectEncode;
   SDV($PmFormMailHeaders, '');
   SDV($PmFormMailParameters, '');
 
@@ -269,6 +269,8 @@ function PmFormMail($pagename, $msgtmpl, $opt, $safe_opt) {
   $mailto = implode(', ', $mailto);
   $from = $opt['from'];
   $subject = $opt['subject'];
+  if (isEnabled($EnablePmFormMailSubjectEncode, 0) && preg_match("/[^\x20-\x7E]/", $subject)) 
+    $subject = strtoupper("=?$Charset?B?"). base64_encode($subject)."?=";
   $header = $PmFormMailHeaders;
   if ($from) $header = "From: $from\r\n$header";
   $header = preg_replace("/[\r\n]*$/", '', $header);

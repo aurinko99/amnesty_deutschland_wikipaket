@@ -55,7 +55,7 @@
 
 */
 
-$RecipeInfo['PowerTools']['Version'] = '2009-09-17';
+$RecipeInfo['PowerTools']['Version'] = '2011-03-08';
 
 
 ## (plist ...)
@@ -140,7 +140,7 @@ function MxMakePList($pagename, $args, $opt='') {
 
 
 ## (pagelist ......) [all pagelist parameters allowed]
-$MarkupExpr['pagelist'] = 'MxPageList($pagename, $params)'; 
+$MarkupExpr['pagelist'] = 'MxPageList($pagename, preg_replace($rpat, $rrep, $params))'; 
 function MxPageList($pagename, $args) {
 	StopWatch('pagelist start');
 	$opt = array('o' => $args, 'fmt' => 'csv');

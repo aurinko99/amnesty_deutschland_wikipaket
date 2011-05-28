@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------------------------
 //
-//	Lightbox v2.04
+//	Lightbox v2.05
 //	by Lokesh Dhakar - http://www.lokeshdhakar.com
-//	Last Modification: 2/9/08
+//	Last Modification: 3/18/11
 //
 //	For more information, visit:
 //	http://lokeshdhakar.com/projects/lightbox2/
@@ -14,8 +14,6 @@
 //  Thanks: Scott Upton(uptonic.com), Peter-Paul Koch(quirksmode.com), and Thomas Fuchs(mir.aculo.us) for ideas, libs, and snippets.
 //  		Artemy Tregubenko (arty.name) for cleanup and help in updating to latest ver of proto-aculous.
 //
-// This file was modified by Petko Yotov for the purposes of
-// the Mini gallery for PmWiki. (2010-04-13)
 // -----------------------------------------------------------------------------------
 /*
 
@@ -44,18 +42,12 @@
 */
 // -----------------------------------------------------------------------------------
 
-
-var LightboxDirUrl;
-$A(document.getElementsByTagName("script")).findAll( function(s) {
-  return (s.src && s.src.match(/lightbox\.js(\?.*)?$/))
-}).each( function(s) { LightboxDirUrl = s.src.replace(/lightbox\.js$/,''); });
-
 //
 //  Configurationl
 //
 LightboxOptions = Object.extend({
-    fileLoadingImage:        LightboxDirUrl + "loading.gif",
-    fileBottomNavCloseImage: LightboxDirUrl + "close.gif",
+    fileLoadingImage:        'images/loading.gif',     
+    fileBottomNavCloseImage: 'images/closelabel.gif',
 
     overlayOpacity: 0.8,   // controls transparency of shadow overlay
 
@@ -66,10 +58,9 @@ LightboxOptions = Object.extend({
 
 	// When grouping images this is used to write: Image # of #.
 	// Change it for non-english localization
-	labelImage: "",
-	labelOf: "/"
+	labelImage: "Image",
+	labelOf: "of"
 }, window.LightboxOptions || {});
-
 
 // -----------------------------------------------------------------------------------
 
@@ -222,7 +213,7 @@ Lightbox.prototype = {
         this.imageArray = [];
         var imageNum = 0;       
 
-        if ((imageLink.rel == 'lightbox')){
+        if ((imageLink.getAttribute("rel") == 'lightbox')){
             // if image is NOT part of a set, add single image to imageArray
             this.imageArray.push([imageLink.href, imageLink.title]);         
         } else {
@@ -265,10 +256,12 @@ Lightbox.prototype = {
         var imgPreloader = new Image();
         
         // once image is preloaded, resize image container
-
-
         imgPreloader.onload = (function(){
             this.lightboxImage.src = this.imageArray[this.activeImage][0];
+            /*Bug Fixed by Andy Scott*/
+            this.lightboxImage.width = imgPreloader.width;
+            this.lightboxImage.height = imgPreloader.height;
+            /*End of Bug Fix*/
             this.resizeImageContainer(imgPreloader.width, imgPreloader.height);
         }).bind(this);
         imgPreloader.src = this.imageArray[this.activeImage][0];
@@ -335,11 +328,8 @@ Lightbox.prototype = {
     //
     updateDetails: function() {
     
-        // if caption is not null
-        if (this.imageArray[this.activeImage][1] != ""){
-            this.caption.update(this.imageArray[this.activeImage][1]).show();
-        }
-        
+        this.caption.update(this.imageArray[this.activeImage][1]).show();
+
         // if image is part of set display 'Image x of x' 
         if (this.imageArray.length > 1){
             this.numberDisplay.update( LightboxOptions.labelImage + ' ' + (this.activeImage + 1) + ' ' + LightboxOptions.labelOf + '  ' + this.imageArray.length).show();
@@ -355,7 +345,7 @@ Lightbox.prototype = {
                 afterFinish: (function() {
 	                // update overlay size and update nav
 	                var arrayPageSize = this.getPageSize();
-	                this.overlay.setStyle({ height: arrayPageSize[1] + 'px' });
+	                this.overlay.setStyle({ width: arrayPageSize[0] + 'px', height: arrayPageSize[1] + 'px' });
 	                this.updateNav();
                 }).bind(this)
             } 
@@ -484,7 +474,7 @@ Lightbox.prototype = {
 			windowWidth = document.body.clientWidth;
 			windowHeight = document.body.clientHeight;
 		}	
-		
+
 		// for small pages with total height less then height of the viewport
 		if(yScroll < windowHeight){
 			pageHeight = windowHeight;

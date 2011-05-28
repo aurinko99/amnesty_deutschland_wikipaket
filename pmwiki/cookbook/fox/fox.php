@@ -26,7 +26,7 @@
 +----------------------------------------------------------------------+
 */
 
-$RecipeInfo['Fox']['Version'] = '2010-04-12';
+$RecipeInfo['Fox']['Version'] = '2011-04-08';
 
 $FmtPV['$FoxVersion'] = "'{$RecipeInfo["Fox"]["Version"]}'";
 
@@ -41,9 +41,11 @@ $pagename = ResolvePageName($pagename);
 // 'edit': needs edit permission.
 // 'read': needs read permission (can post to edit protected pages)
 // 'ALWAYS':no permission needed, can also post to 'read' protected pages.
+// $FoxPagePermissions must also be set to include page(s) as permitted targets
 SDV($FoxAuth, 'edit');
 SDV($FoxConfigPageFmt, "$SiteAdminGroup.FoxConfig"); //default config page for page permission patterns
-SDV($FoxTemplatePageFmt, "$SiteGroup.FoxTemplates#null"); //default page + section for templates (null is dummy)
+SDV($FoxFormsFmt, "$SiteGroup.FoxForms"); //default page + section for Fox form templates
+SDV($FoxTemplatePageFmt, "$SiteGroup.FoxTemplates#null");
 SDV($EnableFoxUrlInput, false); //set to true to allow input via url parameters (php $_GET array)
 SDV($EnablePostDirectives, false); //set to true to allow posting of directives of form (: :)
 SDV($EnableAccessCode, false);  //set to true to enable accesscode check (needs access code form fields as well)
@@ -55,32 +57,6 @@ SDV($EnableFoxPTVDelete, false); //set to true to allow PTVs to be deleted by ch
 SDV($FoxPTVDeleteKey, 'ERASEPTV'); //string to use for ersaing (deleting) PTVs, if $EnableFoxPTVDelete = true;
 SDV($FoxCheckErrorMsg, '$[Please enter valid input!]');
 SDV($FoxEnablePTVRefresh, 1); //unsets page cache for PTVs, so PTVs will refresh without need for full page refresh 
-
-# Default posting permission patterns for allowed and prohibited pages to post to
-# (use of wildcards * and $ is possible, use of - at start will prohibit posting to that page)
-# A prohibiting pattern overrules an allowing pattern of the same match!
-# If you want to post to a page in Site group, you need to unset the prohibiting pattern for $SiteGroup first.
-SDVA($FoxPagePermissions, array(
-	'$SiteGroup.DUMMY'  => 'all', //dummy entry needed so permissions will be checked!
-	'$SiteGroup.*'      => 'none',
-	'$SiteAdminGroup.*' => 'none',
-	'PmWiki.*'          => 'none',
-	'*.GroupFooter'     => 'none',
-	'*.GroupHeader'     => 'none',
-	'*.GroupAttributes' => 'none',
-));	
-/*// examples of page permission patterns:
-	//'*.*' => 'all',     // all Fox actions allowed on all pages
-	//'Comments.*'                => 'add,delete', // adding and deleting posts in Comments group
-	//'Comments.{$Group}-{$Name}' => 'add,delete', // adding and deleting posts in comments group for pages with name Group-Name
-	//'*.{$Name}-Comment' => 'add',  // adding posts for pages with -Comment suffix
-	//'{$FullName}-Talk' => 'add',   // adding posts for pages in current group with -Talk suffix
-
-	// The following patterns for 'current page' and 'current group' could be exploited to post to edit protected pages
-	// There is no way to define 'current' strictly, even though it appears as if it has been defined.
-	//'{$Group}.{$Name}' => 'add', // adding to 'current' page
-	//'{$Group}.*' => 'add',       // adding to pages in 'current' group
-*/
 
 ##security check for FoxConfig page location
 if ($SiteGroup != $SiteAdminGroup)
@@ -105,8 +81,28 @@ foreach((array)$FoxPubListFmt as $k=>$v) {
 
 //conditionals for edit forms
 $Conditions['foxpreview'] = '(boolean)$_POST["preview"]';
-$Conditions['foxcheck'] = '(boolean)$GLOBALS["FoxCheckError"]';
+$Conditions['foxcheck'] = 
+$Conditions['foxerror'] = 'FoxCheckErrorCond($condparm) == 1';
+function FoxCheckErrorCond($arg) {
+	global $FoxCheckError;
+	if (!$arg) return (boolean)$FoxCheckError;
+	$arg = ParseArgs($arg);
+	if ($arg[''][0] != $_POST["foxname"]) return '';
+	if (in_array($arg[''][1], $FoxCheckError)) return 1;
+}
 
+## (:foxform #section :) or (:foxform FormPage#section :) for loading Fox forms
+## #section is retrieved from page(s) given with $FoxFormsFmt.
+## $FoxFormsFmt can be array of page names. 
+Markup('foxform', '>if', '/\\(:foxform\\s+(\\S.*?):\\)/ei',
+  "PRR(FoxLoadForm(\$pagename, PSS('$1')))");
+function FoxLoadForm($pagename, $args) {
+	global $FoxFormsFmt;
+	$list = (is_array($FoxFormsFmt)) ? $FoxFormsFmt : array($FoxFormsFmt);
+	$text = RetrieveAuthSection($pagename, $args, $list, 'read');
+	if (!$text) return "%red%Fox form [[$args]] is missing";
+	return PVSE($text);
+}
 
 //(:fox formname ....:) main form markup, starts a fox form
 Markup('fox','directives','/\(:fox ([\\w]+)\\s?(.*?):\)/ei',"Keep(FoxMarkup(\$pagename, PSS('$1'), PSS('$2')))");
@@ -301,7 +297,6 @@ function FoxHandlePost($pagename, $auth) {
 	//get arguments from FILES	
 	foreach($_FILES as $n => $upfile) { 
 		if ($upfile['name']=='') continue;
-		#$fx['UPFILES'][$n] = $upfile;
 		foreach($upfile as $k => $v)
 			if (!$fx[$n.'_'.$k]) $fx[$n.'_'.$k] = $v;
 		//save file extension
@@ -704,9 +699,9 @@ function FoxUpdatePages($pagename, $fx, $tar) {
 		$toptxt = $bottxt = ''; 
 		//extract anchored sections
 		if (strstr($targ['fulltarget'],'#')) {
-			$section = FoxTextSection($pgtxt, $targ['fulltarget']);
+			$section = FoxTextSection($pgtxt, $targ['fulltarget'], array('anchors' => 1));
 			//break off this page process if specified target section is not found
-			if ($section['pos']==0) { 
+			if (empty($section)) { 
 				$FoxMsgFmt[] = "$[Error: could not find target section on] $tgtname";
 				continue;
 			}
@@ -996,16 +991,16 @@ function FoxTextSection($text, $sections, $args = NULL) {
 	if (!$dots && !$b) $bb = $npat;
 	if ($aa) {
 		$pos = strpos($text, "[[#$aa]]"); if ($pos === false) return false;
-	if (@$args['anchors']) 
-		while ($pos > 0 && $text[$pos-1] != "\n") $pos--;
-	else $pos += strlen("[[#$aa]]");
-	$text = substr($text, $pos);
+		if (@$args['anchors']) 
+			while ($pos > 0 && $text[$pos-1] != "\n") $pos--;
+		else $pos += strlen("[[#$aa]]");
+		$text = substr($text, $pos);
 	}
 	if ($bb) {
-		$text = preg_replace("/(.*?)\\[\\[#$bb\\]\\].*$/s", '$1', $text, 1);
+		$text = preg_replace("/(\n)[^\n]*\\[\\[#$bb\\]\\].*$/s", '$1', $text, 1);
 	}
-	$sections = array('text' => $text, 'pos' => $pos);
-	return $sections;
+	$tsections = array('text' => $text, 'pos' => $pos);
+	return $tsections;
 } //}}}
 
 # FoxTemplateEngine -- Interprets the contents of a Fox template file.
@@ -1433,12 +1428,14 @@ function FoxPagePermission($pagename, $act, $targetname, $fx) {
 	}
 	// name check for $act against $FoxPagePermissions
 	$pnames = array();
-	foreach($FoxPagePermissions as $n => $t) {
-		if(strstr($t,'-'.$act)||strstr($t,'none')) { $pnames[$n]='-'.$n; continue; }
-		if(strstr($t,$act)||strstr($t,'all')) $pnames[$n]=$n;
-	}
+	if(is_array($FoxPagePermissions))
+		foreach($FoxPagePermissions as $n => $t) {
+			if(strstr($t,'-'.$act)||strstr($t,'none')) { $pnames[$n]='-'.$n; continue; }
+			if(strstr($t,$act)||strstr($t,'all')) $pnames[$n]=$n;
+		}
 	$pnames = FmtPageName(implode(',',$pnames),$pagename);
-	if($pnames=='') $pnames = '-';
+	//if no permitted names exclude all pages
+	if($pnames=='') $pnames = '-*.*';
 	$namecheck = (boolean)MatchPageNames($targetname,$pnames);
 	// string check against string patterns
 	$strcheck = 0;
@@ -1675,7 +1672,7 @@ function FoxInputCheck($pagename, $fx) {
 		}
 	}
 	if($FoxDebug>4) { echo "<pre>\$check "; print_r($check); echo "</pre>"; }
-	$FoxCheckError = 0;
+	$FoxCheckError = array();
 	foreach($check as $i => $opt) {
 		foreach($opt['names'] as $n) {
 			if (!isset($opt['match'])) $opt['match'] = "?*";
@@ -1686,21 +1683,20 @@ function FoxInputCheck($pagename, $fx) {
 						 || !preg_match("/$pat/is", $fx[$n])) {
 				$FoxMsgFmt[$n] = isset($opt['msg']) ? $opt['msg']
 											: "$[Invalid parameter:] $n";
-				$FoxCheckError = 1;
+				$FoxCheckError[] = $n;
 			}
 			if (@$opt['if'] && !CondText($pagename, 'if '.$opt['if'], 'yes')) {
 				$FoxMsgFmt[$n] = isset($opt['msg']) ? $opt['msg']
 											: "$[Input condition failed]";
-				$FoxCheckError = 1;
+				$FoxCheckError[] = $n;
 			}
 		}
 	}
    $errmsg = ($fx['foxcheckmsg']) ? $fx['foxcheckmsg'] : $FoxCheckErrorMsg;
-   
    //avoid abort or call to foxedit when preview
-   if (isset($fx['preview'])) $FoxCheckError = 0;
+   if (isset($fx['preview'])) unset($FoxCheckError);
    
-   if ($FoxCheckError==1) { 
+   if ($FoxCheckError) { 
    	if ($_SESSION['foxedit'][$pagename]) FoxHandleEdit($pagename);	
    	else FoxAbort($pagename, $errmsg);
 	}
