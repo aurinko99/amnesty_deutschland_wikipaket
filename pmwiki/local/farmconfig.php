@@ -109,7 +109,8 @@ include_once("$FarmD/cookbook/attachdel.php");
 include_once("$FarmD/cookbook/swf-sites.php");
 
 ##Versionskontrolle
-include_once("$FarmD/cookbook/recipecheck.php");
+include_once("$FarmD/cookbook/analyze.php");
+$AnalyzeKey = 'aedmr';
 
 ##Kontaktformular
 include_once("$FarmD/cookbook/pmform.php");
