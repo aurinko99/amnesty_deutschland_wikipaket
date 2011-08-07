@@ -24,7 +24,7 @@ array_splice($WikiLibDirs, $where, 0, array(new PageStore($PageStorePath)));
 global $LinkPageCreateFmt;
 SDV($LinkPageCreateFmt, "<a class='createlinktext' href='\$PageUrl?action=edit'>\$LinkText</a>");
 
-##Gruppennummer und Gruppenname
+## Gruppennummer und Gruppenname
 global $AiGroupNumber, $AiDonationPath, $AiSupporterPath, $AiMemberPath;
 $AiDonationPath = "https://www.amnesty.de/spendentool/$AiGroupNumber";
 $AiSupporterPath = "https://www.amnesty.de/foerdererwerden/$AiGroupNumber";
